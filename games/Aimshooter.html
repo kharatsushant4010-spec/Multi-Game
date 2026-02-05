@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic 3D Archery Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            height: 100vh;
+            color: #fff;
+            cursor: none;
+        }
+
+        .game-container {
+            position: fixed;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a3a5a 0%, #0a1a2a 70%);
+        }
+
+        /* Sky with advanced gradient */
+        .sky {
+            position: absolute;
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(
+                to bottom,
+                #4a90e2 0%,
+                #87ceeb 20%,
+                #98d6ea 40%,
+                #b0e0e6 60%,
+                #f0f8ff 100%
+            );
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        /* Sun */
+        .sun {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffdd00 0%, #ff9900 70%);
+            border-radius: 50%;
+            top: 15%;
+            right: 15%;
+            box-shadow: 0 0 60px #ff9900, 0 0 120px rgba(255, 153, 0, 0.5);
+            z-index: 2;
+        }
+
+        /* Animated Clouds */
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50px;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            animation: cloudFloat 60s linear infinite;
+        }
+
+        .cloud:nth-child(1) {
+            width: 120px;
+            height: 40px;
+            top: 20%;
+            left: 10%;
+            animation-duration: 80s;
+        }
+
+        .cloud:nth-child(2) {
+            width: 180px;
+            height: 60px;
+            top: 30%;
+            left: 40%;
+            animation-duration: 60s;
+        }
+
+        .cloud:nth-child(3) {
+            width: 150px;
+            height: 50px;
+            top: 15%;
+            right: 20%;
+            animation-duration: 90s;
+        }
+
+        @keyframes cloudFloat {
+            0% { transform: translateX(-200px); }
+            100% { transform: translateX(calc(100vw + 200px)); }
+        }
+
+        /* Terrain with 3D perspective */
+        .terrain {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            bottom: 0;
+            z-index: 4;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        /* Distant mountains */
+        .mountains-back {
+            position: absolute;
+            width: 100%;
+            height: 300px;
+            bottom: 200px;
+            background: linear-gradient(to top, #2a4a6a 0%, #3a5a7a 100%);
+            clip-path: polygon(
+                0% 100%, 5% 40%, 15% 60%, 25% 30%,
+                35% 70%, 45% 40%, 55% 80%, 65% 50%,
+                75% 90%, 85% 60%, 95% 100%, 100% 100%
+            );
+            z-index: 4;
+            opacity: 0.8;
+        }
+
+        /* Middle mountains */
+        .mountains-mid {
+            position: absolute;
+            width: 100%;
+            height: 350px;
+            bottom: 150px;
+            background: linear-gradient(to top, #3a5a7a 0%, #4a6a8a 100%);
+            clip-path: polygon(
+                0% 100%, 3% 20%, 12% 50%, 22% 10%,
+                32% 60%, 42% 20%, 52% 70%, 62% 30%,
+                72% 80%, 82% 40%, 92% 90%, 100% 100%
+            );
+            z-index: 5;
+            opacity: 0.9;
+        }
+
+        /* Foreground mountains */
+        .mountains-front {
+            position: absolute;
+            width: 100%;
+            height: 400px;
+            bottom: 0;
+            background: linear-gradient(to top, #4a6a8a 0%, #5a7a9a 100%);
+            clip-path: polygon(
+                0% 100%, 2% 0%, 10% 40%, 20% 0%,
+                30% 50%, 40% 10%, 50% 60%, 60% 20%,
+                70% 70%, 80% 30%, 90% 80%, 100% 100%
+            );
+            z-index: 6;
+        }
+
+        /* Shooting range area */
+        .range {
+            position: absolute;
+            width: 100%;
+            height: 200px;
+            bottom: 0;
+            background: linear-gradient(to top, #5a4a3a 0%, #7a6a5a 30%, #8b7a6a 100%);
+            z-index: 7;
+            transform: perspective(800px) rotateX(60deg);
+            transform-origin: bottom;
+            box-shadow: inset 0 -20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Range markings */
+        .range-markings {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 8;
+        }
+
+        .range-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            width: 100%;
+            bottom: 0;
+        }
+
+        .range-line:nth-child(1) { bottom: 30%; }
+        .range-line:nth-child(2) { bottom: 50%; }
+        .range-line:nth-child(3) { bottom: 70%; }
+
+        /* Target area with depth */
+        .target-area {
+            position: absolute;
+            width: 600px;
+            height: 400px;
+            right: 25%;
+            bottom: 35%;
+            transform: perspective(800px) rotateX(60deg) translateZ(100px);
+            transform-origin: bottom;
+            z-index: 9;
+        }
+
+        /* Target stand */
+        .target-stand {
+            position: absolute;
+            width: 20px;
+            height: 250px;
+            background: linear-gradient(to top, #8b7355 0%, #a38b6d 30%, #8b7355 100%);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 9;
+        }
+
+        .target-stand::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 10px;
+            background: #654321;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+
+        /* 3D Target with realistic rings */
+        .target {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(
+                circle at center,
+                #ff0000 0%,
+                #ff0000 15%,
+                #ffffff 15%,
+                #ffffff 30%,
+                #ff0000 30%,
+                #ff0000 45%,
+                #ffffff 45%,
+                #ffffff 60%,
+                #ff0000 60%,
+                #ff0000 75%,
+                #ffffff 75%,
+                #ffffff 90%,
+                #000000 90%,
+                #000000 100%
+            );
+            border-radius: 50%;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            transition: transform 0.3s;
+            border: 3px solid #000;
+        }
+
+        .target-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, gold 0%, #ff9900 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #000;
+            box-shadow: 0 0 15px gold;
+            z-index: 11;
+        }
+
+        /* Archer camera view */
+        .archer-view {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* Bow in first person */
+        .fps-bow {
+            position: absolute;
+            width: 300px;
+            height: 400px;
+            bottom: 50px;
+            right: 50%;
+            transform: translateX(50%);
+            z-index: 21;
+            pointer-events: none;
+        }
+
+        .bow-visual {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, 
+                rgba(139, 69, 19, 0.9) 0%,
+                rgba(160, 82, 45, 0.8) 50%,
+                transparent 100%);
+            clip-path: polygon(
+                40% 0%, 60% 0%, 65% 20%, 75% 40%,
+                80% 60%, 75% 80%, 65% 100%, 35% 100%,
+                25% 80%, 20% 60%, 25% 40%, 35% 20%
+            );
+            filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.5));
+        }
+
+        .bow-riser {
+            position: absolute;
+            width: 20px;
+            height: 120px;
+            background: linear-gradient(to right, #654321 0%, #8b4513 50%, #654321 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .bow-limbs {
+            position: absolute;
+            width: 250px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(to right, 
+                transparent 0%,
+                #654321 20%,
+                #8b4513 50%,
+                #654321 80%,
+                transparent 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .bow-string {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, #ffffff 0%, #f0f0f0 50%, #ffffff 100%);
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            z-index: 22;
+            transition: transform 0.2s;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Arrow on bow */
+        .arrow-loaded {
+            position: absolute;
+            width: 180px;
+            height: 4px;
+            background: linear-gradient(to right, 
+                transparent 0%,
+                #8b7355 10%,
+                #654321 30%,
+                #333333 70%,
+                transparent 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 23;
+            display: none;
+        }
+
+        .arrow-tip {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-left: 16px solid #ff3333;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        .arrow-fletching {
+            position: absolute;
+            width: 20px;
+            height: 12px;
+            background: linear-gradient(to right, #ff9900 0%, #ffcc00 100%);
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
+        }
+
+        /* Arrow in flight */
+        .arrow-flight {
+            position: absolute;
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(to right, 
+                #8b7355 0%,
+                #654321 30%,
+                #333333 70%,
+                #8b7355 100%);
+            z-index: 25;
+            display: none;
+            pointer-events: none;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.7));
+        }
+
+        /* Aiming reticle */
+        .reticle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .reticle-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .reticle-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 50, 50, 0.8);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+        }
+
+        /* Trajectory line */
+        .trajectory {
+            position: absolute;
+            width: 1000px;
+            height: 2px;
+            background: linear-gradient(to right, 
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(255, 255, 255, 0.4) 30%,
+                rgba(255, 255, 255, 0.2) 70%,
+                transparent 100%);
+            top: 50%;
+            left: 50%;
+            transform-origin: left center;
+            z-index: 15;
+            display: none;
+            pointer-events: none;
+        }
+
+        .trajectory-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .trajectory-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Power indicator */
+        .power-indicator {
+            position: absolute;
+            width: 30px;
+            height: 200px;
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            z-index: 40;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .power-fill {
+            position: absolute;
+            width: 100%;
+            height: 0%;
+            bottom: 0;
+            background: linear-gradient(to top, 
+                #00ff00 0%,
+                #aaff00 25%,
+                #ffff00 50%,
+                #ffaa00 75%,
+                #ff0000 100%);
+            transition: height 0.05s;
+            border-radius: 13px;
+        }
+
+        /* Arrow counter */
+        .arrows-left {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            display: flex;
+            gap: 15px;
+            z-index: 40;
+        }
+
+        .arrow-indicator {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .arrow-indicator.used {
+            background: rgba(255, 50, 50, 0.3);
+            border-color: rgba(255, 50, 50, 0.5);
+            transform: scale(0.8);
+            opacity: 0.6;
+        }
+
+        /* Score display */
+        .score-display {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            font-size: 32px;
+            font-weight: bold;
+            color: gold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+            z-index: 40;
+        }
+
+        /* Wind indicator */
+        .wind-display {
+            position: absolute;
+            top: 120px;
+            left: 50px;
+            font-size: 18px;
+            color: #87ceeb;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wind-arrow {
+            font-size: 24px;
+            transition: transform 0.3s;
+        }
+
+        /* Hit effects */
+        .hit-effect {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(255, 200, 50, 0.6) 30%,
+                rgba(255, 100, 50, 0.3) 70%,
+                transparent 100%);
+            pointer-events: none;
+            z-index: 35;
+            opacity: 0;
+        }
+
+        .score-popup {
+            position: absolute;
+            font-size: 28px;
+            font-weight: bold;
+            color: gold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 36;
+            opacity: 0;
+        }
+
+        /* Game messages */
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.8),
+                0 0 40px rgba(255, 255, 255, 0.5);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor::before, .cursor::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .cursor::before {
+            width: 2px;
+            height: 20px;
+            left: 9px;
+            top: 0;
+        }
+
+        .cursor::after {
+            width: 20px;
+            height: 2px;
+            left: 0;
+            top: 9px;
+        }
+
+        /* Game status */
+        .game-status {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            text-align: center;
+            z-index: 40;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Sky and Atmosphere -->
+        <div class="sky">
+            <div class="sun"></div>
+            <div class="clouds">
+                <div class="cloud"></div>
+                <div class="cloud"></div>
+                <div class="cloud"></div>
+            </div>
+        </div>
+
+        <!-- 3D Terrain -->
+        <div class="terrain">
+            <div class="mountains-back"></div>
+            <div class="mountains-mid"></div>
+            <div class="mountains-front"></div>
+            <div class="range">
+                <div class="range-markings">
+                    <div class="range-line"></div>
+                    <div class="range-line"></div>
+                    <div class="range-line"></div>
+                </div>
+            </div>
+            
+            <!-- Target Area -->
+            <div class="target-area">
+                <div class="target-stand"></div>
+                <div class="target" id="target">
+                    <div class="target-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Archer First Person View -->
+        <div class="archer-view">
+            <div class="fps-bow">
+                <div class="bow-visual"></div>
+                <div class="bow-riser"></div>
+                <div class="bow-limbs"></div>
+                <div class="bow-string" id="bowString"></div>
+                <div class="arrow-loaded" id="arrowLoaded">
+                    <div class="arrow-tip"></div>
+                    <div class="arrow-fletching"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arrow in Flight -->
+        <div class="arrow-flight" id="arrowFlight">
+            <div class="arrow-tip"></div>
+            <div class="arrow-fletching"></div>
+        </div>
+
+        <!-- Reticle -->
+        <div class="reticle">
+            <div class="reticle-circle"></div>
+            <div class="reticle-dot"></div>
+        </div>
+
+        <!-- Trajectory Line -->
+        <div class="trajectory" id="trajectory">
+            <div class="trajectory-dots" id="trajectoryDots"></div>
+        </div>
+
+        <!-- UI Elements -->
+        <div class="power-indicator">
+            <div class="power-fill" id="powerFill"></div>
+        </div>
+
+        <div class="arrows-left" id="arrowsLeft">
+            <div class="arrow-indicator">➶</div>
+            <div class="arrow-indicator">➶</div>
+            <div class="arrow-indicator">➶</div>
+        </div>
+
+        <div class="score-display">
+            Score: <span id="scoreValue">0</span>
+        </div>
+
+        <div class="wind-display">
+            <span>Wind: <span id="windValue">0.0</span></span>
+            <span class="wind-arrow" id="windArrow">→</span>
+        </div>
+
+        <!-- Effects -->
+        <div class="hit-effect" id="hitEffect"></div>
+        <div id="scorePopupContainer"></div>
+
+        <!-- Game Messages -->
+        <div class="game-message" id="gameMessage"></div>
+
+        <!-- Custom Cursor -->
+        <div class="cursor" id="cursor"></div>
+
+        <!-- Game Status -->
+        <div class="game-status">
+            Hold LEFT CLICK to aim • Release to shoot • 3 arrows per round
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            score: 0,
+            arrows: 3,
+            isAiming: false,
+            aimPower: 0,
+            aimAngle: { x: 0, y: 0 },
+            wind: 0,
+            gameActive: true,
+            lastShotTime: 0,
+            powerInterval: null,
+            targetPosition: { x: 0, y: 0 }
+        };
+
+        // DOM Elements
+        const elements = {
+            gameContainer: document.querySelector('.game-container'),
+            bowString: document.getElementById('bowString'),
+            arrowLoaded: document.getElementById('arrowLoaded'),
+            arrowFlight: document.getElementById('arrowFlight'),
+            trajectory: document.getElementById('trajectory'),
+            trajectoryDots: document.getElementById('trajectoryDots'),
+            powerFill: document.getElementById('powerFill'),
+            arrowsLeft: document.getElementById('arrowsLeft'),
+            scoreValue: document.getElementById('scoreValue'),
+            windValue: document.getElementById('windValue'),
+            windArrow: document.getElementById('windArrow'),
+            hitEffect: document.getElementById('hitEffect'),
+            scorePopupContainer: document.getElementById('scorePopupContainer'),
+            gameMessage: document.getElementById('gameMessage'),
+            cursor: document.getElementById('cursor'),
+            target: document.getElementById('target')
+        };
+
+        // Physics Constants
+        const PHYSICS = {
+            gravity: 0.098, // Reduced for better gameplay
+            arrowSpeed: 0.8,
+            windMultiplier: 0.3,
+            airResistance: 0.99,
+            maxPower: 100,
+            powerBuildRate: 1.8
+        };
+
+        // Initialize Game
+        function initGame() {
+            calculateTargetPosition();
+            setupEventListeners();
+            updateWind();
+            updateUI();
+            setupCursor();
+            showMessage("READY", 1500);
+        }
+
+        // Calculate target position in screen coordinates
+        function calculateTargetPosition() {
+            const targetRect = elements.target.getBoundingClientRect();
+            gameState.targetPosition = {
+                x: targetRect.left + targetRect.width / 2,
+                y: targetRect.top + targetRect.height / 2
+            };
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Mouse Events
+            elements.gameContainer.addEventListener('mousedown', startAiming);
+            document.addEventListener('mouseup', releaseArrow);
+            document.addEventListener('mousemove', handleMouseMove);
+
+            // Touch Events
+            elements.gameContainer.addEventListener('touchstart', handleTouchStart);
+            document.addEventListener('touchend', handleTouchEnd);
+            document.addEventListener('touchmove', handleTouchMove);
+
+            // Prevent context menu
+            elements.gameContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Resize handling
+            window.addEventListener('resize', calculateTargetPosition);
+        }
+
+        // Setup custom cursor
+        function setupCursor() {
+            document.addEventListener('mousemove', (e) => {
+                elements.cursor.style.left = `${e.clientX}px`;
+                elements.cursor.style.top = `${e.clientY}px`;
+            });
+        }
+
+        // Handle mouse movement for aiming
+        function handleMouseMove(e) {
+            if (!gameState.gameActive) return;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            // Calculate angle from center (reticle position)
+            const dx = e.clientX - centerX;
+            const dy = e.clientY - centerY;
+            
+            gameState.aimAngle = {
+                x: dx / 100, // Scale down for sensitivity
+                y: dy / 100
+            };
+
+            if (gameState.isAiming) {
+                updateTrajectory();
+            }
+        }
+
+        // Handle touch events
+        function handleTouchStart(e) {
+            e.preventDefault();
+            if (!gameState.gameActive || gameState.arrows <= 0) return;
+            
+            const touch = e.touches[0];
+            startAiming({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!gameState.gameActive || !gameState.isAiming) return;
+            
+            const touch = e.touches[0];
+            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            if (!gameState.gameActive || !gameState.isAiming) return;
+            releaseArrow();
+        }
+
+        // Start aiming
+        function startAiming(e) {
+            if (!gameState.gameActive || gameState.arrows <= 0 || gameState.isAiming) return;
+            if (Date.now() - gameState.lastShotTime < 500) return;
+
+            gameState.isAiming = true;
+            gameState.aimPower = 0;
+            
+            // Show arrow on bow
+            elements.arrowLoaded.style.display = 'block';
+            elements.trajectory.style.display = 'block';
+            
+            // Start power build
+            gameState.powerInterval = setInterval(() => {
+                if (gameState.aimPower < PHYSICS.maxPower) {
+                    gameState.aimPower += PHYSICS.powerBuildRate;
+                    elements.powerFill.style.height = `${gameState.aimPower}%`;
+                    
+                    // Update bow string tension
+                    const tension = gameState.aimPower / PHYSICS.maxPower;
+                    elements.bowString.style.transform = `translateY(-50%) scaleX(${1 - tension * 0.4})`;
+                    
+                    updateTrajectory();
+                }
+            }, 16); // ~60fps
+
+            // Initial trajectory
+            updateTrajectory();
+        }
+
+        // Update trajectory visualization
+        function updateTrajectory() {
+            if (!gameState.isAiming) return;
+
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight / 2;
+            const angle = calculateShotAngle();
+            
+            // Clear previous dots
+            elements.trajectoryDots.innerHTML = '';
+            
+            // Calculate trajectory points
+            const velocity = (gameState.aimPower / PHYSICS.maxPower) * PHYSICS.arrowSpeed;
+            let x = 0;
+            let y = 0;
+            let vx = Math.cos(angle) * velocity;
+            let vy = Math.sin(angle) * velocity;
+            
+            // Apply wind
+            vx += gameState.wind * PHYSICS.windMultiplier;
+            
+            // Create trajectory dots
+            for (let i = 0; i < 20; i++) {
+                // Apply physics
+                vy += PHYSICS.gravity;
+                vx *= PHYSICS.airResistance;
+                vy *= PHYSICS.airResistance;
+                
+                x += vx * 10;
+                y += vy * 10;
+                
+                // Create dot
+                const dot = document.createElement('div');
+                dot.className = 'trajectory-dot';
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
+                elements.trajectoryDots.appendChild(dot);
+                
+                // Stop if out of bounds
+                if (x > 1000 || y > 500) break;
+            }
+            
+            // Update trajectory line
+            const trajectoryAngle = Math.atan2(y, x) * (180 / Math.PI);
+            const distance = Math.sqrt(x * x + y * y);
+            
+            elements.trajectory.style.width = `${distance}px`;
+            elements.trajectory.style.transform = `rotate(${trajectoryAngle}deg)`;
+            elements.trajectory.style.left = `${startX}px`;
+            elements.trajectory.style.top = `${startY}px`;
+        }
+
+        // Calculate shot angle based on aim and power
+        function calculateShotAngle() {
+            const baseAngle = Math.atan2(gameState.aimAngle.y, gameState.aimAngle.x);
+            const powerFactor = (gameState.aimPower / PHYSICS.maxPower) * 0.3;
+            
+            // Higher power = flatter trajectory
+            return baseAngle - powerFactor;
+        }
+
+        // Release arrow
+        function releaseArrow() {
+            if (!gameState.isAiming || !gameState.gameActive) return;
+
+            gameState.isAiming = false;
+            gameState.arrows--;
+            gameState.lastShotTime = Date.now();
+            
+            // Clear power interval
+            clearInterval(gameState.powerInterval);
+            
+            // Hide arrow on bow
+            elements.arrowLoaded.style.display = 'none';
+            elements.trajectory.style.display = 'none';
+            
+            // Reset bow string
+            elements.bowString.style.transform = `translateY(-50%) scaleX(1)`;
+            
+            // Shoot arrow
+            shootArrow();
+            
+            // Update UI
+            updateArrowIndicators();
+            
+            // Check if round is over
+            if (gameState.arrows === 0) {
+                setTimeout(endRound, 2000);
+            }
+        }
+
+        // Shoot arrow animation
+        function shootArrow() {
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight / 2;
+            const angle = calculateShotAngle();
+            
+            // Set arrow starting position
+            elements.arrowFlight.style.left = `${startX}px`;
+            elements.arrowFlight.style.top = `${startY}px`;
+            elements.arrowFlight.style.transform = `rotate(${angle}rad)`;
+            elements.arrowFlight.style.display = 'block';
+            
+            // Physics simulation
+            const velocity = (gameState.aimPower / PHYSICS.maxPower) * PHYSICS.arrowSpeed;
+            let x = startX;
+            let y = startY;
+            let vx = Math.cos(angle) * velocity * 15;
+            let vy = Math.sin(angle) * velocity * 15;
+            
+            // Apply wind
+            vx += gameState.wind * PHYSICS.windMultiplier * 10;
+            
+            const animation = setInterval(() => {
+                // Apply physics
+                vy += PHYSICS.gravity * 2;
+                vx *= PHYSICS.airResistance;
+                vy *= PHYSICS.airResistance;
+                
+                x += vx;
+                y += vy;
+                
+                // Update arrow position
+                elements.arrowFlight.style.left = `${x}px`;
+                elements.arrowFlight.style.top = `${y}px`;
+                
+                // Update arrow rotation based on velocity
+                const currentAngle = Math.atan2(vy, vx);
+                elements.arrowFlight.style.transform = `rotate(${currentAngle}rad)`;
+                
+                // Check for target hit
+                const distanceToTarget = Math.sqrt(
+                    Math.pow(x - gameState.targetPosition.x, 2) + 
+                    Math.pow(y - gameState.targetPosition.y, 2)
+                );
+                
+                if (distanceToTarget < 60) {
+                    clearInterval(animation);
+                    handleTargetHit(x, y, distanceToTarget);
+                    return;
+                }
+                
+                // Check if arrow is out of bounds
+                if (y > window.innerHeight || x < 0 || x > window.innerWidth) {
+                    clearInterval(animation);
+                    elements.arrowFlight.style.display = 'none';
+                    showMessage("MISS", 1000);
+                }
+            }, 16);
+        }
+
+        // Handle target hit
+        function handleTargetHit(hitX, hitY, distance) {
+            elements.arrowFlight.style.display = 'none';
+            
+            // Show hit effect
+            showHitEffect(hitX, hitY);
+            
+            // Calculate score
+            let points = 0;
+            let message = "";
+            
+            if (distance < 10) {
+                points = 100;
+                message = "BULLSEYE!";
+            } else if (distance < 25) {
+                points = 50;
+                message = "GREAT SHOT!";
+            } else if (distance < 40) {
+                points = 30;
+                message = "GOOD SHOT";
+            } else {
+                points = 10;
+                message = "HIT";
+            }
+            
+            // Wind bonus for difficult shots
+            if (Math.abs(gameState.wind) > 0.5) {
+                points += 5;
+            }
+            
+            // Update score
+            gameState.score += points;
+            
+            // Show score popup
+            showScorePopup(hitX, hitY, points);
+            
+            // Show message
+            showMessage(message, 1500);
+            
+            // Update UI
+            updateUI();
+            
+            // Shake target on hit
+            shakeTarget();
+        }
+
+        // Show hit effect
+        function showHitEffect(x, y) {
+            elements.hitEffect.style.left = `${x}px`;
+            elements.hitEffect.style.top = `${y}px`;
+            elements.hitEffect.style.opacity = '1';
+            
+            // Animate
+            elements.hitEffect.animate([
+                { transform: 'scale(0)', opacity: 1 },
+                { transform: 'scale(1.5)', opacity: 0 }
+            ], {
+                duration: 600,
+                easing: 'ease-out'
+            });
+            
+            setTimeout(() => {
+                elements.hitEffect.style.opacity = '0';
+            }, 600);
+        }
+
+        // Show score popup
+        function showScorePopup(x, y, points) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = `+${points}`;
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            
+            elements.scorePopupContainer.appendChild(popup);
+            
+            // Animate
+            popup.animate([
+                { opacity: 1, transform: 'translateY(0)' },
+                { opacity: 0, transform: 'translateY(-50px)' }
+            ], {
+                duration: 1000,
+                easing: 'ease-out'
+            });
+            
+            setTimeout(() => {
+                popup.remove();
+            }, 1000);
+        }
+
+        // Shake target on hit
+        function shakeTarget() {
+            elements.target.style.transition = 'transform 0.1s';
+            
+            // Shake animation
+            const shake = [
+                'translateX(-50%) translateX(-5px)',
+                'translateX(-50%) translateX(5px)',
+                'translateX(-50%) translateX(-5px)',
+                'translateX(-50%) translateX(5px)',
+                'translateX(-50%)'
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                elements.target.style.transform = shake[i];
+                i++;
+                if (i >= shake.length) {
+                    clearInterval(interval);
+                    elements.target.style.transform = 'translateX(-50%)';
+                }
+            }, 50);
+        }
+
+        // Update wind
+        function updateWind() {
+            gameState.wind = (Math.random() * 2 - 1).toFixed(1);
+            elements.windValue.textContent = Math.abs(gameState.wind);
+            
+            // Update wind arrow
+            if (gameState.wind > 0) {
+                elements.windArrow.textContent = '→';
+                elements.windArrow.style.color = gameState.wind > 0.5 ? '#ff9900' : '#87ceeb';
+            } else {
+                elements.windArrow.textContent = '←';
+                elements.windArrow.style.color = gameState.wind < -0.5 ? '#ff9900' : '#87ceeb';
+            }
+            
+            // Randomly change wind
+            setTimeout(updateWind, 3000 + Math.random() * 4000);
+        }
+
+        // Update arrow indicators
+        function updateArrowIndicators() {
+            const indicators = elements.arrowsLeft.querySelectorAll('.arrow-indicator');
+            indicators.forEach((indicator, index) => {
+                if (index >= gameState.arrows) {
+                    indicator.classList.add('used');
+                } else {
+                    indicator.classList.remove('used');
+                }
+            });
+        }
+
+        // Update UI
+        function updateUI() {
+            elements.scoreValue.textContent = gameState.score;
+        }
+
+        // Show game message
+        function showMessage(text, duration = 2000) {
+            elements.gameMessage.textContent = text;
+            elements.gameMessage.style.opacity = '1';
+            
+            // Animate
+            elements.gameMessage.animate([
+                { opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' },
+                { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+                { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+                { opacity: 0, transform: 'translate(-50%, -50%) scale(1.2)' }
+            ], {
+                duration: duration,
+                easing: 'ease-in-out'
+            });
+            
+            setTimeout(() => {
+                elements.gameMessage.style.opacity = '0';
+            }, duration);
+        }
+
+        // End round
+        function endRound() {
+            gameState.gameActive = false;
+            
+            setTimeout(() => {
+                showMessage(`FINAL SCORE: ${gameState.score}`, 3000);
+                
+                // Reset after delay
+                setTimeout(resetRound, 3500);
+            }, 500);
+        }
+
+        // Reset round
+        function resetRound() {
+            // Reset arrows
+            gameState.arrows = 3;
+            gameState.gameActive = true;
+            
+            // Update wind
+            updateWind();
+            
+            // Update UI
+            updateArrowIndicators();
+            
+            // Show ready message
+            showMessage("READY", 1500);
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

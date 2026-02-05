@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About - GameZone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.9)),
+                url("https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600") no-repeat center center fixed;
+    background-size: cover;
+    color: #ffffff;
+    overflow-x: hidden;
+}
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: float-particle 12s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes float-particle {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% {
+        transform: translateY(-100vh) translateX(30px);
+        opacity: 0;
+    }
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    position: relative;
+}
+
+.logo::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.logo:hover::before {
+    opacity: 1;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.logo:hover {
+    transform: scale(1.08) rotate(-2deg);
+    text-shadow: 0 0 25px rgba(255, 255, 255, 1);
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #000000, #1a1a1a);
+    border: 2px solid #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    animation: float 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.logo-icon::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    animation: slideDown 0.6s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.back-btn {
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+}
+
+.back-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 80px;
+    animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero h1 {
+    font-size: 64px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #ffffff, #aaaaaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+    letter-spacing: 3px;
+    animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.8)); }
+}
+
+.hero p {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 1px;
+}
+
+.section {
+    margin-bottom: 60px;
+    animation: fadeInUp 0.8s ease;
+    animation-fill-mode: backwards;
+}
+
+.section:nth-child(1) { animation-delay: 0.2s; }
+.section:nth-child(2) { animation-delay: 0.4s; }
+.section:nth-child(3) { animation-delay: 0.6s; }
+.section:nth-child(4) { animation-delay: 0.8s; }
+
+.section h2 {
+    font-size: 36px;
+    margin-bottom: 30px;
+    color: #ffffff;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+}
+
+.section h2 i {
+    margin-right: 12px;
+}
+
+.section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #ffffff, transparent);
+    animation: expand 0.8s ease forwards;
+}
+
+@keyframes expand {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+.section p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.card {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.card:hover::before {
+    opacity: 1;
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 60px rgba(255, 255, 255, 0.3);
+}
+
+.card-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: inline-block;
+    animation: bounce 2s ease-in-out infinite;
+    color: #ffffff;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.card h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #ffffff;
+}
+
+.card p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 30px;
+    backdrop-filter: blur(10px);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.step::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.step:hover::after {
+    left: 100%;
+}
+
+.step:hover {
+    transform: translateX(10px);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 40px rgba(255, 255, 255, 0.2);
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #ffffff, #aaaaaa);
+    color: #000000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
+}
+
+.step-content h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.step-content p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.feature {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.4s ease;
+}
+
+.feature:hover {
+    transform: translateY(-8px) rotate(2deg);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 15px 50px rgba(255, 255, 255, 0.3);
+}
+
+.feature-icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+    display: inline-block;
+    animation: spin-slow 4s linear infinite;
+    color: #ffffff;
+}
+
+@keyframes spin-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.feature h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.feature p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 40px;
+    }
+    
+    .section h2 {
+        font-size: 28px;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .step {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+    <a href="demohomepage.html" class="logo">
+        <div class="logo-icon">
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100" alt="GameZone Logo">
+        </div>
+        <span>GameZone</span>
+    </a>
+    <a href="demohomepage.html" class="back-btn">← Back to Home</a>
+</div>
+
+<div class="container">
+    
+    <div class="hero">
+        <h1>About GameZone</h1>
+        <p>Your Ultimate Free Online Gaming Platform</p>
+    </div>
+    
+    <div class="section">
+        <h2>What is GameZone?</h2>
+        <p>GameZone is a premium collection of free online games designed to provide endless entertainment right in your browser. No downloads, no installations – just pure gaming fun! From classic arcade games to brain-teasing puzzles, we've curated the best collection of games for players of all ages and skill levels.</p>
+        <p>Whether you're looking for a quick break during work, want to challenge your friends, or simply love gaming, GameZone has something special for everyone. Our platform features stunning visuals, smooth gameplay, and an intuitive interface that makes gaming a breeze.</p>
+    </div>
+    
+    <div class="section">
+        <h2>How to Play Games</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Browse Games</h3>
+                    <p>Click anywhere on the landing screen to enter GameZone. You'll see our complete collection of games displayed in beautiful cards with descriptions and categories.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Choose Your Game</h3>
+                    <p>Use the search bar to find specific games, or browse through categories. Click on any game card to see more details. Each game shows its category (Single Player, 2 Players, etc.) and a brief description.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Start Playing</h3>
+                    <p>Click the "Play Now" button or anywhere on the game card. The game will load in fullscreen mode with a sleek interface. Wait for the loading screen to complete – usually just a few seconds!</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Game Controls</h3>
+                    <p>Most games use keyboard controls (Arrow keys, WASD, Spacebar) or mouse/touch controls. Specific instructions are provided within each game. Use the toolbar buttons to Reload the game, enter Fullscreen mode, or Exit fullscreen.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Navigate Back</h3>
+                    <p>Click the "Back" button in the top-left corner to return to the game selection screen. You can also click the GameZone logo to return to the landing page. Press ESC to exit fullscreen mode anytime.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2><i class="fas fa-star"></i> Features</h2>
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-gamepad feature-icon"></i>
+                <h4>30+ Games</h4>
+                <p>Diverse collection of classic and modern games</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-rocket feature-icon"></i>
+                <h4>Instant Play</h4>
+                <p>No downloads or installations required</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-mobile-alt feature-icon"></i>
+                <h4>Responsive</h4>
+                <p>Works perfectly on desktop, tablet, and mobile</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-palette feature-icon"></i>
+                <h4>Beautiful UI</h4>
+                <p>Modern design with smooth animations</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-search feature-icon"></i>
+                <h4>Easy Search</h4>
+                <p>Quickly find your favorite games</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-bolt feature-icon"></i>
+                <h4>Fast Loading</h4>
+                <p>Optimized for quick game launches</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-bullseye feature-icon"></i>
+                <h4>All Levels</h4>
+                <p>Games for beginners to experts</p>
+            </div>
+            
+            <div class="feature">
+                <i class="fas fa-gift feature-icon"></i>
+                <h4>100% Free</h4>
+                <p>All games completely free to play</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2><i class="fas fa-dice"></i> Game Categories</h2>
+        <div class="cards-grid">
+            <div class="card">
+                <i class="fas fa-puzzle-piece card-icon"></i>
+                <h3>Puzzle Games</h3>
+                <p>Challenge your mind with Sudoku, 2048, Crossword, and more brain-teasing puzzles that test your logic and problem-solving skills.</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-running card-icon"></i>
+                <h3>Arcade Classics</h3>
+                <p>Relive the golden age with Snake, Pac-Man, Brick Breaker, and Flappy Bird. Fast-paced action and addictive gameplay!</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-users card-icon"></i>
+                <h3>Multiplayer Games</h3>
+                <p>Challenge your friends with Chess, Tic-Tac-Toe, Ludo, and Pong. Perfect for competitive gaming sessions!</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-tachometer-alt card-icon"></i>
+                <h3>Skill Games</h3>
+                <p>Test your reflexes with Reflex Rush, Type Test, Whack-A-Mole, and Bubble Shooter. How high can you score?</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-brain card-icon"></i>
+                <h3>Strategy Games</h3>
+                <p>Plan your moves carefully in Chess, Math Quiz, and Maze Solver. Think ahead to achieve victory!</p>
+            </div>
+            
+            <div class="card">
+                <i class="fas fa-smile card-icon"></i>
+                <h3>Casual Fun</h3>
+                <p>Relax with Coin Toss, Rock Paper Scissors, Fruit Crush, and Simon Says. Perfect for quick gaming breaks!</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    const particleCount = 40;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 12 + 's';
+        particle.style.animationDuration = (Math.random() * 8 + 8) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+createParticles();
+</script>
+
+</body>
+</html>

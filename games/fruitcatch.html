@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fruit Catch Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins','Segoe UI',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:url("https://images.unsplash.com/photo-1502741338009-cac2772e18bc")
+  center/cover no-repeat;
+}
+
+/* Glass UI */
+.wrapper{
+  backdrop-filter: blur(16px);
+  background: rgba(0,0,0,.55);
+  padding:26px;
+  border-radius:24px;
+  box-shadow:0 40px 80px rgba(0,0,0,.7);
+}
+
+/* Game Area */
+.game{
+  width:480px;
+  height:560px;
+  background: linear-gradient(180deg,#1a1a1a,#0f0f0f);
+  border-radius:20px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* HUD */
+.hud{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 18px;
+  color:#fff;
+  font-size:15px;
+  background: rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+}
+
+/* Basket */
+.basket{
+  position:absolute;
+  bottom:15px;
+  left:200px;
+  font-size:52px;
+  transition:left .15s ease;
+}
+
+/* Fruits */
+.fruit{
+  position:absolute;
+  top:-40px;
+  font-size:34px;
+  animation: fall linear forwards;
+}
+
+@keyframes fall{
+  from{top:-40px}
+  to{top:580px}
+}
+
+/* Power-up */
+.power{
+  filter: drop-shadow(0 0 10px gold);
+}
+
+/* Game Over */
+.overlay{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.85);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:#fff;
+  font-size:22px;
+  display:none;
+}
+
+.overlay button{
+  margin-top:18px;
+  padding:10px 24px;
+  border:none;
+  border-radius:12px;
+  background:#ffb703;
+  font-size:16px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+  <div class="game" id="game">
+    <div class="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Level: <span id="level">1</span></div>
+      <div>❤️ <span id="lives">3</span></div>
+    </div>
+
+    <div class="basket" id="basket">🧺</div>
+
+    <div class="overlay" id="over">
+      <div>Game Over 😢</div>
+      <div>Score: <span id="final"></span></div>
+      <button onclick="restart()">Restart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const game = document.getElementById("game");
+const basket = document.getElementById("basket");
+const scoreEl = document.getElementById("score");
+const levelEl = document.getElementById("level");
+const livesEl = document.getElementById("lives");
+const over = document.getElementById("over");
+const final = document.getElementById("final");
+
+const fruits = ["🍎","🍌","🍇","🍓","🍊"];
+let score=0, lives=3, level=1;
+let basketX=200, speed=6;
+let running=true;
+
+/* Controls */
+document.addEventListener("keydown",e=>{
+  if(!running) return;
+  if(e.key==="ArrowLeft" && basketX>0) basketX-=30;
+  if(e.key==="ArrowRight" && basketX<420) basketX+=30;
+  basket.style.left=basketX+"px";
+});
+
+/* Touch */
+game.addEventListener("touchmove",e=>{
+  const x = e.touches[0].clientX - game.getBoundingClientRect().left;
+  basketX = Math.min(420,Math.max(0,x-25));
+  basket.style.left=basketX+"px";
+});
+
+function spawnFruit(){
+  if(!running) return;
+
+  const fruit=document.createElement("div");
+  const isPower=Math.random()<0.1;
+
+  fruit.className="fruit"+(isPower?" power":"");
+  fruit.textContent=isPower?"⭐":fruits[Math.floor(Math.random()*fruits.length)];
+  fruit.style.left=Math.random()*440+"px";
+  fruit.style.animationDuration=(2.5-(level*0.2))+"s";
+
+  game.appendChild(fruit);
+
+  const fall=setInterval(()=>{
+    const top=fruit.offsetTop;
+
+    if(top>470 &&
+      fruit.offsetLeft>basketX-20 &&
+      fruit.offsetLeft<basketX+60){
+      fruit.remove();
+      clearInterval(fall);
+
+      if(isPower){
+        speed=3;
+        setTimeout(()=>speed=6+level,3000);
+      }else{
+        score+=10;
+      }
+
+      scoreEl.textContent=score;
+      if(score%100===0){level++;levelEl.textContent=level;}
+    }
+
+    if(top>560){
+      fruit.remove();
+      clearInterval(fall);
+      lives--;
+      livesEl.textContent=lives;
+      if(lives===0) end();
+    }
+  },20);
+}
+
+function end(){
+  running=false;
+  final.textContent=score;
+  over.style.display="flex";
+}
+
+function restart(){
+  score=0; lives=3; level=1;
+  basketX=200; speed=6;
+  scoreEl.textContent=0;
+  livesEl.textContent=3;
+  levelEl.textContent=1;
+  over.style.display="none";
+  running=true;
+}
+
+setInterval(spawnFruit,1000);
+</script>
+
+</body>
+</html>

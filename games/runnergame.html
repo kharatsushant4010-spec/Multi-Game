@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Dash | Dino-Style Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 300px;
+            border: 3px solid #00ff9d;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #0a0a0a;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #0a0a0a;
+        }
+
+        #gameOverScreen, #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+        }
+
+        #startScreen {
+            display: flex;
+        }
+
+        #gameOverScreen {
+            display: none;
+        }
+
+        .game-title {
+            font-size: 3em;
+            color: #00ff9d;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff9d;
+        }
+
+        .score-display {
+            font-size: 2.5em;
+            color: #00ff9d;
+            margin: 20px 0;
+            text-shadow: 0 0 5px #00ff9d;
+        }
+
+        .instructions {
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            color: #00ff9d;
+            background: rgba(0, 255, 157, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #00ff9d;
+        }
+
+        .key {
+            display: inline-block;
+            background: #222;
+            padding: 2px 10px;
+            border-radius: 4px;
+            margin: 0 5px;
+            border: 1px solid #00ff9d;
+            font-family: monospace;
+        }
+
+        button {
+            background: #00ff9d;
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.5);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.8);
+        }
+
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ff9d;
+            font-size: 1.2em;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #00ff9d;
+        }
+
+        .finish-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, #00ff9d, #00ccff, #00ff9d);
+            box-shadow: 0 0 20px #00ff9d;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .distance-meter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #00ff9d;
+            font-size: 1.2em;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid #00ff9d;
+        }
+
+        .game-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 5px;
+            background: linear-gradient(90deg, #00ff9d, #00ccff);
+            transition: width 0.3s;
+            box-shadow: 0 0 10px #00ff9d;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="startScreen">
+            <h1 class="game-title">NEON DASH</h1>
+            <div class="instructions">
+                Run through the neon obstacles and reach the finish line!
+                <div class="controls">
+                    <span class="key">SPACE</span> or <span class="key">↑</span> to JUMP
+                    <span class="key">↓</span> to DUCK
+                </div>
+                <div>Distance to finish: <span id="targetDistance">500m</span></div>
+            </div>
+            <button id="startBtn">START GAME</button>
+        </div>
+
+        <div id="gameOverScreen">
+            <h1 class="game-title">GAME OVER</h1>
+            <div class="score-display">Score: <span id="finalScore">0</span></div>
+            <div class="instructions">
+                <div id="resultMessage"></div>
+                Distance covered: <span id="distanceCovered">0m</span>
+            </div>
+            <button id="restartBtn">PLAY AGAIN</button>
+        </div>
+
+        <div class="hud">
+            Score: <span id="score">0</span>
+        </div>
+        
+        <div class="distance-meter">
+            Distance: <span id="distance">0</span>m
+        </div>
+        
+        <div class="game-progress" id="progressBar"></div>
+        <div class="finish-line"></div>
+        
+        <canvas id="gameCanvas" width="800" height="300"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('finalScore');
+        const distanceElement = document.getElementById('distance');
+        const distanceCoveredElement = document.getElementById('distanceCovered');
+        const progressBar = document.getElementById('progressBar');
+        const resultMessage = document.getElementById('resultMessage');
+        const targetDistanceElement = document.getElementById('targetDistance');
+
+        // Game constants
+        const TARGET_DISTANCE = 500; // Finish line at 500m
+        const GROUND_Y = 250;
+        const GRAVITY = 0.8;
+        const JUMP_FORCE = 15;
+        const INITIAL_SPEED = 5;
+        const SPEED_INCREMENT = 0.001;
+
+        // Game state
+        let game = {
+            running: false,
+            score: 0,
+            distance: 0,
+            speed: INITIAL_SPEED,
+            gameOver: false,
+            reachedFinish: false
+        };
+
+        // Player object
+        const player = {
+            x: 100,
+            y: GROUND_Y,
+            width: 40,
+            height: 60,
+            velocityY: 0,
+            isJumping: false,
+            isDucking: false,
+            color: '#00ff9d'
+        };
+
+        // Ground
+        const ground = {
+            y: GROUND_Y,
+            height: 50
+        };
+
+        // Obstacles
+        const obstacles = [];
+        const obstacleTypes = [
+            { width: 30, height: 40, color: '#ff3366' },   // Standard
+            { width: 60, height: 25, color: '#ff9933' },   // Low (jump)
+            { width: 20, height: 70, color: '#9966ff' }    // Tall (duck)
+        ];
+
+        // Stars for background
+        const stars = [];
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height * 0.7,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 0.5 + 0.2,
+                opacity: Math.random() * 0.5 + 0.3
+            });
+        }
+
+        // Initialize game
+        function init() {
+            // Create obstacles
+            for (let i = 0; i < 3; i++) {
+                generateObstacle(300 + i * 150);
+            }
+            
+            // Set target distance
+            targetDistanceElement.textContent = TARGET_DISTANCE + 'm';
+        }
+
+        // Generate new obstacle
+        function generateObstacle(x = canvas.width) {
+            const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+            obstacles.push({
+                x: x,
+                y: GROUND_Y - type.height,
+                width: type.width,
+                height: type.height,
+                color: type.color,
+                passed: false
+            });
+        }
+
+        // Draw ground
+        function drawGround() {
+            // Ground
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, ground.y, canvas.width, ground.height);
+            
+            // Ground pattern
+            ctx.fillStyle = '#00ff9d';
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.fillRect(i, ground.y, 20, 3);
+            }
+            
+            // Ground glow
+            ctx.shadowColor = '#00ff9d';
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = '#00ff9d';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, ground.y);
+            ctx.lineTo(canvas.width, ground.y);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        // Draw player
+        function drawPlayer() {
+            const height = player.isDucking ? player.height * 0.6 : player.height;
+            const y = player.isDucking ? player.y + (player.height - height) : player.y;
+            
+            // Player body with glow
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, y, player.width, height);
+            ctx.shadowBlur = 0;
+            
+            // Player outline
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(player.x, y, player.width, height);
+            
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(player.x + player.width - 15, y + 15, 8, 8);
+            ctx.fillRect(player.x + player.width - 30, y + 15, 8, 8);
+            
+            // Running animation
+            if (!player.isJumping && !player.isDucking && game.running) {
+                const legOffset = Math.sin(Date.now() * 0.01) * 5;
+                ctx.fillStyle = '#0066cc';
+                ctx.fillRect(player.x + 5, y + height - 10, 10, 15 + legOffset);
+                ctx.fillRect(player.x + player.width - 15, y + height - 10, 10, 15 - legOffset);
+            }
+        }
+
+        // Draw obstacles
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                // Obstacle with glow
+                ctx.shadowColor = obstacle.color;
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                ctx.shadowBlur = 0;
+                
+                // Obstacle outline
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                
+                // Danger symbol
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('!', obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2 + 5);
+            });
+        }
+
+        // Draw stars
+        function drawStars() {
+            ctx.fillStyle = '#fff';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.opacity;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // Update game
+        function update() {
+            if (!game.running) return;
+            
+            // Update distance and score
+            game.distance += game.speed;
+            game.score = Math.floor(game.distance);
+            
+            // Update UI
+            scoreElement.textContent = game.score;
+            distanceElement.textContent = Math.floor(game.distance);
+            
+            // Update progress bar
+            const progress = Math.min((game.distance / TARGET_DISTANCE) * 100, 100);
+            progressBar.style.width = progress + '%';
+            
+            // Check if reached finish line
+            if (game.distance >= TARGET_DISTANCE && !game.reachedFinish) {
+                game.reachedFinish = true;
+                winGame();
+                return;
+            }
+            
+            // Increase speed over time
+            game.speed += SPEED_INCREMENT;
+            
+            // Update player physics
+            if (player.isJumping) {
+                player.velocityY -= GRAVITY;
+                player.y -= player.velocityY;
+                
+                // Check if landed
+                if (player.y >= GROUND_Y) {
+                    player.y = GROUND_Y;
+                    player.isJumping = false;
+                    player.velocityY = 0;
+                }
+            }
+            
+            // Auto-reset ducking
+            if (player.isDucking) {
+                setTimeout(() => {
+                    player.isDucking = false;
+                }, 300);
+            }
+            
+            // Update obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                
+                // Move obstacle
+                obstacle.x -= game.speed;
+                
+                // Remove off-screen obstacles
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(i, 1);
+                    generateObstacle();
+                    continue;
+                }
+                
+                // Check if passed
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    game.score += 10;
+                }
+                
+                // Check collision
+                if (checkCollision(player, obstacle)) {
+                    // Check if ducking avoids tall obstacle
+                    if (player.isDucking && obstacle.height > 50) {
+                        obstacle.passed = true;
+                        game.score += 20;
+                    } else {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+            
+            // Update stars
+            stars.forEach(star => {
+                star.x -= star.speed;
+                if (star.x < 0) {
+                    star.x = canvas.width;
+                    star.y = Math.random() * canvas.height * 0.7;
+                }
+            });
+        }
+
+        // Check collision
+        function checkCollision(player, obstacle) {
+            const playerHeight = player.isDucking ? player.height * 0.6 : player.height;
+            const playerY = player.isDucking ? player.y + (player.height - playerHeight) : player.y;
+            
+            return player.x < obstacle.x + obstacle.width &&
+                   player.x + player.width > obstacle.x &&
+                   playerY < obstacle.y + obstacle.height &&
+                   playerY + playerHeight > obstacle.y;
+        }
+
+        // Game over
+        function gameOver() {
+            game.running = false;
+            game.gameOver = true;
+            distanceCoveredElement.textContent = Math.floor(game.distance) + 'm';
+            finalScoreElement.textContent = game.score;
+            resultMessage.textContent = 'You hit an obstacle!';
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Win game
+        function winGame() {
+            game.running = false;
+            distanceCoveredElement.textContent = Math.floor(game.distance) + 'm';
+            finalScoreElement.textContent = game.score;
+            resultMessage.textContent = 'Congratulations! You reached the finish line!';
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Draw everything
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw game elements
+            drawStars();
+            drawGround();
+            drawObstacles();
+            drawPlayer();
+            
+            // Draw distance markers
+            if (game.running) {
+                ctx.fillStyle = '#00ff9d';
+                ctx.font = '12px Arial';
+                for (let i = 0; i < 6; i++) {
+                    const x = (canvas.width - (game.distance % 100) + i * 100) % canvas.width;
+                    const distance = Math.floor(game.distance / 100) * 100 + i * 100;
+                    ctx.fillText(distance + 'm', x, 20);
+                }
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            if (game.running) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start game
+        function startGame() {
+            // Reset game state
+            game.running = true;
+            game.score = 0;
+            game.distance = 0;
+            game.speed = INITIAL_SPEED;
+            game.gameOver = false;
+            game.reachedFinish = false;
+            
+            // Reset player
+            player.y = GROUND_Y;
+            player.isJumping = false;
+            player.isDucking = false;
+            player.velocityY = 0;
+            
+            // Clear obstacles
+            obstacles.length = 0;
+            for (let i = 0; i < 3; i++) {
+                generateObstacle(300 + i * 150);
+            }
+            
+            // Reset UI
+            scoreElement.textContent = '0';
+            distanceElement.textContent = '0';
+            progressBar.style.width = '0%';
+            
+            // Hide screens
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            // Start game loop
+            gameLoop();
+        }
+
+        // Jump function
+        function jump() {
+            if (!game.running || player.isJumping || player.isDucking) return;
+            player.isJumping = true;
+            player.velocityY = JUMP_FORCE;
+        }
+
+        // Duck function
+        function duck() {
+            if (!game.running || player.isJumping || player.isDucking) return;
+            player.isDucking = true;
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+
+        document.addEventListener('keydown', (e) => {
+            if (!game.running) return;
+            
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && !player.isJumping) {
+                jump();
+                e.preventDefault();
+            } else if (e.code === 'ArrowDown' && !player.isDucking) {
+                duck();
+                e.preventDefault();
+            }
+        });
+
+        // Touch controls for mobile
+        let touchStartY = 0;
+        canvas.addEventListener('touchstart', (e) => {
+            if (!game.running) return;
+            
+            touchStartY = e.touches[0].clientY;
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (!game.running) return;
+            
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaY = touchStartY - touchEndY;
+            
+            if (deltaY > 30 && !player.isJumping) {
+                jump();
+            } else if (deltaY < -30 && !player.isDucking) {
+                duck();
+            }
+            
+            e.preventDefault();
+        });
+
+        // Initialize game on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

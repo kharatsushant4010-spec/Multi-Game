@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Coin Toss Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ---------- RESET ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ---------- BACKGROUND ---------- */
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url("images/coin.jpg")
+        center / cover no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- GAME CONTAINER ---------- */
+.game-box {
+    position: relative;
+    z-index: 1;
+    width: 450px;
+    padding: 100px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+    text-align: center;
+    color: #f5f5f5;
+}
+
+.game-box h1 {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #d4af37;
+}
+
+.subtitle {
+    font-size: 20px;
+    opacity: 0.8;
+    margin-bottom: 25px;
+}
+
+/* ---------- COIN ---------- */
+.coin-area {
+    perspective: 10000px;
+    margin-bottom: 25px;
+}
+
+.coin {
+    width: 150px;
+    height: 150px;
+    margin: auto;
+    border-radius: 50%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1.4s cubic-bezier(.2,.6,.3,1);
+}
+
+.side {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    backface-visibility: hidden;
+}
+
+/* Heads */
+.heads {
+    background: radial-gradient(circle, #f5d76e, #b8962e);
+    color: #2c2c2c;
+}
+
+/* Tails */
+.tails {
+    background: radial-gradient(circle, #d9d9d9, #8a8a8a);
+    color: #2c2c2c;
+    transform: rotateY(180deg);
+}
+
+/* ---------- BUTTON ---------- */
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #d4af37, #b8962e);
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(212,175,55,0.4);
+}
+
+/* ---------- RESULT ---------- */
+.result {
+    margin-top: 15px;
+    font-size: 20	px;
+    font-weight: 600;
+    color: #d4af37;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-box">
+    <h1>Coin Toss</h1>
+    <div class="subtitle">Test your luck</div>
+
+    <div class="coin-area">
+        <div class="coin" id="coin">
+            <div class="side heads">HEADS</div>
+            <div class="side tails">TAILS</div>
+        </div>
+    </div>
+
+    <button onclick="tossCoin()">Toss Coin</button>
+    <div class="result" id="result">—</div>
+</div>
+
+<script>
+let rotation = 0;
+
+function tossCoin() {
+    const coin = document.getElementById("coin");
+    const resultText = document.getElementById("result");
+
+    // TRUE RANDOM LOGIC
+    const isHeads = Math.random() < 0.5;
+
+    // Add multiple spins for realism
+    rotation += 1440 + (isHeads ? 0 : 180);
+
+    coin.style.transform = `rotateY(${rotation}deg)`;
+
+    resultText.textContent = "Flipping...";
+
+    setTimeout(() => {
+        resultText.textContent = isHeads ? "Result: HEADS 🪙" : "Result: TAILS 🪙";
+    }, 1400);
+}
+</script>
+
+</body>
+</html>

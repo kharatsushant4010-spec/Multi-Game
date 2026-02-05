@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game - Progressive Difficulty</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .control-panel {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+        }
+
+        .algorithm-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+
+        .algorithm-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .generation-speed {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .speed-label {
+            color: #aaa;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #66BB6A, #388E3C);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(90deg, #2196F3, #0D47A1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(90deg, #42A5F5, #1565C0);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(90deg, #FF9800, #EF6C00);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(90deg, #FFB74D, #F57C00);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #f44336, #c62828);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #ef5350, #d32f2f);
+            transform: translateY(-2px);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(20, 20, 30, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            flex: 1;
+        }
+
+        .difficulty-stats {
+            background: rgba(40, 20, 40, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            flex: 1;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .difficulty-value {
+            color: #FF9800;
+        }
+
+        .maze-size-value {
+            color: #2196F3;
+        }
+
+        .level-value {
+            color: #9C27B0;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .maze-container {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        #maze {
+            display: grid;
+            gap: 2px;
+            background-color: #111;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+
+        .cell {
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .wall {
+            background-color: #2c3e50;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .path {
+            background-color: #1a1a2e;
+        }
+
+        .start {
+            background-color: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50;
+            border-radius: 50%;
+        }
+
+        .exit {
+            background-color: #FF9800;
+            box-shadow: 0 0 8px #FF9800;
+            border-radius: 50%;
+        }
+
+        .player {
+            background-color: #2196F3;
+            box-shadow: 0 0 10px #2196F3;
+            border-radius: 50%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .player::after {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 50%;
+            height: 50%;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .visited {
+            background-color: rgba(33, 150, 243, 0.2);
+        }
+
+        .solution {
+            background-color: rgba(255, 152, 0, 0.3);
+        }
+
+        .trap {
+            background-color: rgba(244, 67, 54, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .teleporter {
+            background-color: rgba(156, 39, 176, 0.7);
+            animation: rotate 4s infinite linear;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            background: rgba(30, 30, 46, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+            margin-top: 10px;
+        }
+
+        .instructions h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .instructions p {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #ccc;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            color: #FF9800;
+            font-weight: bold;
+        }
+
+        .danger {
+            color: #f44336;
+        }
+
+        .teleport {
+            color: #9C27B0;
+        }
+
+        .difficulty-progress {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #FF9800, #f44336);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .upcoming-challenges {
+            background: rgba(40, 20, 40, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .upcoming-challenges h4 {
+            color: #9C27B0;
+            margin-bottom: 10px;
+        }
+
+        .challenge-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .challenge-badge {
+            background: rgba(156, 39, 176, 0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: 1px solid #9C27B0;
+        }
+
+        .active {
+            background: rgba(156, 39, 176, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn-group {
+                justify-content: center;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Maze Game - Progressive Difficulty</h1>
+        <p class="subtitle">Each solved maze increases the difficulty. Can you reach level 10?</p>
+    </div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="algorithm-info">
+                <div class="algorithm-title">Algorithm: Randomized DFS</div>
+                <div class="generation-speed">
+                    <span class="speed-label">Generation Speed:</span>
+                    <span class="speed-value">Instant</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="btn-group">
+                    <button id="generate-btn" class="btn-primary">Generate New Maze</button>
+                    <button id="solve-btn" class="btn-secondary">Solve by AI</button>
+                    <button id="reset-btn" class="btn-warning">Reset Player</button>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="pause-btn" class="btn-secondary">Pause Game</button>
+                    <button id="restart-btn" class="btn-danger">Restart Game</button>
+                </div>
+            </div>
+            
+            <div class="difficulty-progress">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="time-value">0s</div>
+                        <div class="stat-label">Time</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="steps-value">0</div>
+                        <div class="stat-label">Steps</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value level-value" id="level-value">1</div>
+                        <div class="stat-label">Level</div>
+                    </div>
+                </div>
+                
+                <div class="difficulty-stats">
+                    <div class="stat-box">
+                        <div class="stat-value difficulty-value" id="difficulty-value">Easy</div>
+                        <div class="stat-label">Difficulty</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value maze-size-value" id="size-value">20×25</div>
+                        <div class="stat-label">Maze Size</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="score-value">0</div>
+                        <div class="stat-label">Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="upcoming-challenges">
+                <h4>Active Challenges:</h4>
+                <div class="challenge-list" id="challenge-list">
+                    <div class="challenge-badge">Basic Maze</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="maze-container">
+            <div id="maze"></div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Play - Progressive Difficulty</h3>
+            <p>Use <span class="highlight">arrow keys</span> or <span class="highlight">WASD</span> to move. Each time you solve a maze, the next one becomes harder!</p>
+            <p>Difficulty increases through:</p>
+            <ul>
+                <li><span class="highlight">Larger mazes</span> - More cells to navigate</li>
+                <li><span class="danger">Traps</span> - Random cells that reset your position</li>
+                <li><span class="teleport">Teleporters</span> - Randomly transport you to another location</li>
+                <li><span class="highlight">Complex patterns</span> - More dead ends and winding paths</li>
+                <li><span class="highlight">Time pressure</span> - Limited time to complete</li>
+            </ul>
+            <p><strong>Goal:</strong> Reach the highest level possible!</p>
+        </div>
+    </div>
+
+    <script>
+        // Game configuration
+        const BASE_ROWS = 20;
+        const BASE_COLS = 25;
+        const MAX_ROWS = 40;
+        const MAX_COLS = 50;
+        const MIN_CELL_SIZE = 16;
+        const MAX_LEVEL = 10;
+        
+        // Game state
+        let rows = BASE_ROWS;
+        let cols = BASE_COLS;
+        let maze = [];
+        let player = { x: 0, y: 0 };
+        let exit = { x: 0, y: 0 };
+        let start = { x: 0, y: 0 };
+        let steps = 0;
+        let seconds = 0;
+        let timer = null;
+        let isSolving = false;
+        let isPaused = false;
+        let level = 1;
+        let score = 0;
+        let traps = [];
+        let teleporters = [];
+        let timeLimit = 0;
+        let timeBonus = 0;
+        let difficulty = "Easy";
+        let activeChallenges = ["Basic Maze"];
+        
+        // DOM elements
+        const mazeElement = document.getElementById('maze');
+        const timeValueElement = document.getElementById('time-value');
+        const stepsValueElement = document.getElementById('steps-value');
+        const levelValueElement = document.getElementById('level-value');
+        const difficultyValueElement = document.getElementById('difficulty-value');
+        const sizeValueElement = document.getElementById('size-value');
+        const scoreValueElement = document.getElementById('score-value');
+        const progressBarElement = document.getElementById('progress-bar');
+        const challengeListElement = document.getElementById('challenge-list');
+        const generateButton = document.getElementById('generate-btn');
+        const solveButton = document.getElementById('solve-btn');
+        const resetButton = document.getElementById('reset-btn');
+        const pauseButton = document.getElementById('pause-btn');
+        const restartButton = document.getElementById('restart-btn');
+        
+        // Initialize the game
+        function initGame() {
+            calculateMazeSize();
+            createEmptyMaze();
+            generateMaze();
+            drawMaze();
+            startTimer();
+            setupEventListeners();
+            updateUI();
+        }
+        
+        // Calculate maze size based on level
+        function calculateMazeSize() {
+            // Increase size with level, but cap at maximum
+            const sizeFactor = 1 + (level - 1) * 0.2;
+            rows = Math.min(MAX_ROWS, Math.floor(BASE_ROWS * sizeFactor));
+            cols = Math.min(MAX_COLS, Math.floor(BASE_COLS * sizeFactor));
+            
+            // Ensure odd numbers for maze generation
+            if (rows % 2 === 0) rows++;
+            if (cols % 2 === 0) cols++;
+            
+            sizeValueElement.textContent = `${rows}×${cols}`;
+            
+            // Update difficulty text
+            if (level <= 3) difficulty = "Easy";
+            else if (level <= 6) difficulty = "Medium";
+            else if (level <= 9) difficulty = "Hard";
+            else difficulty = "Expert";
+            
+            difficultyValueElement.textContent = difficulty;
+            levelValueElement.textContent = level;
+            
+            // Update progress bar
+            const progress = (level / MAX_LEVEL) * 100;
+            progressBarElement.style.width = `${progress}%`;
+        }
+        
+        // Create an empty maze with all walls
+        function createEmptyMaze() {
+            maze = [];
+            for (let i = 0; i < rows; i++) {
+                maze[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    maze[i][j] = 1; // 1 = wall, 0 = path
+                }
+            }
+        }
+        
+        // Generate maze using Randomized DFS algorithm with increasing complexity
+        function generateMaze() {
+            // Reset game elements
+            traps = [];
+            teleporters = [];
+            activeChallenges = ["Basic Maze"];
+            
+            // Calculate maze complexity based on level
+            const complexity = 0.3 + (level * 0.05);
+            const trapCount = Math.floor((rows * cols) * 0.01 * level);
+            const teleporterCount = Math.max(0, Math.floor(level / 3));
+            
+            // Create stack for DFS
+            const stack = [];
+            
+            // Start from a random position to add variability
+            start = { 
+                x: Math.floor(Math.random() * (rows/2)) * 2, 
+                y: Math.floor(Math.random() * (cols/2)) * 2 
+            };
+            
+            // Ensure start is within bounds
+            start.x = Math.max(0, Math.min(start.x, rows-1));
+            start.y = Math.max(0, Math.min(start.y, cols-1));
+            
+            maze[start.x][start.y] = 0; // Make start a path
+            stack.push(start);
+            
+            // Arrays to define possible moves (up, right, down, left)
+            const directions = [
+                { dx: -2, dy: 0 },  // up
+                { dx: 0, dy: 2 },   // right
+                { dx: 2, dy: 0 },   // down
+                { dx: 0, dy: -2 }   // left
+            ];
+            
+            // Continue until stack is empty
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                
+                // Get unvisited neighbors
+                const neighbors = [];
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+                    
+                    // Check if neighbor is within bounds and is a wall
+                    if (
+                        newX >= 0 && newX < rows &&
+                        newY >= 0 && newY < cols &&
+                        maze[newX][newY] === 1
+                    ) {
+                        neighbors.push({ x: newX, y: newY, dir });
+                    }
+                }
+                
+                if (neighbors.length > 0) {
+                    // Randomly select a neighbor
+                    const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    
+                    // Remove wall between current and neighbor
+                    const wallX = current.x + randomNeighbor.dir.dx / 2;
+                    const wallY = current.y + randomNeighbor.dir.dy / 2;
+                    maze[wallX][wallY] = 0;
+                    
+                    // Make neighbor a path
+                    maze[randomNeighbor.x][randomNeighbor.y] = 0;
+                    
+                    // Push neighbor to stack
+                    stack.push({ x: randomNeighbor.x, y: randomNeighbor.y });
+                    
+                    // Occasionally add complexity (dead ends)
+                    if (Math.random() < complexity && neighbors.length > 1) {
+                        // Sometimes don't remove one of the walls to create dead ends
+                        if (Math.random() < 0.3) {
+                            const skipDir = directions[Math.floor(Math.random() * directions.length)];
+                            const skipX = current.x + skipDir.dx;
+                            const skipY = current.y + skipDir.dy;
+                            if (skipX >= 0 && skipX < rows && skipY >= 0 && skipY < cols) {
+                                maze[skipX][skipY] = 1;
+                            }
+                        }
+                    }
+                } else {
+                    // Backtrack
+                    stack.pop();
+                }
+            }
+            
+            // Place exit at furthest point from start
+            placeExitAtFurthestPoint();
+            
+            // Ensure start and exit are paths
+            maze[start.x][start.y] = 0;
+            maze[exit.x][exit.y] = 0;
+            
+            // Add traps based on level
+            if (level >= 2) {
+                addTraps(trapCount);
+                activeChallenges.push("Traps");
+            }
+            
+            // Add teleporters based on level
+            if (level >= 4) {
+                addTeleporters(teleporterCount);
+                activeChallenges.push("Teleporters");
+            }
+            
+            // Add time limit for higher levels
+            if (level >= 7) {
+                timeLimit = 60 + (level * 10); // 60s + 10s per level
+                timeBonus = level * 50;
+                activeChallenges.push("Time Limit");
+            } else {
+                timeLimit = 0;
+                timeBonus = 0;
+            }
+            
+            // Reset player position
+            player = { x: start.x, y: start.y };
+            steps = 0;
+            stepsValueElement.textContent = steps;
+            
+            // Reset timer
+            resetTimer();
+            
+            // Update challenges display
+            updateChallengesDisplay();
+        }
+        
+        // Place exit at the furthest point from start using BFS
+        function placeExitAtFurthestPoint() {
+            const visited = new Set();
+            const queue = [];
+            let furthestPoint = start;
+            
+            queue.push({ x: start.x, y: start.y, dist: 0 });
+            visited.add(`${start.x},${start.y}`);
+            
+            const directions = [
+                { dx: -1, dy: 0 },
+                { dx: 0, dy: 1 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: -1 }
+            ];
+            
+            while (queue.length > 0) {
+                const current = queue.shift();
+                furthestPoint = current;
+                
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+                    const key = `${newX},${newY}`;
+                    
+                    if (
+                        newX >= 0 && newX < rows &&
+                        newY >= 0 && newY < cols &&
+                        maze[newX][newY] === 0 &&
+                        !visited.has(key)
+                    ) {
+                        visited.add(key);
+                        queue.push({ x: newX, y: newY, dist: current.dist + 1 });
+                    }
+                }
+            }
+            
+            exit = { x: furthestPoint.x, y: furthestPoint.y };
+        }
+        
+        // Add traps to the maze
+        function addTraps(count) {
+            for (let i = 0; i < count; i++) {
+                let trapX, trapY;
+                let attempts = 0;
+                
+                // Find a valid position for trap (not on start, exit, or existing trap)
+                do {
+                    trapX = Math.floor(Math.random() * rows);
+                    trapY = Math.floor(Math.random() * cols);
+                    attempts++;
+                } while (
+                    (maze[trapX][trapY] !== 0 || 
+                    (trapX === start.x && trapY === start.y) ||
+                    (trapX === exit.x && trapY === exit.y) ||
+                    traps.some(t => t.x === trapX && t.y === trapY)) &&
+                    attempts < 100
+                );
+                
+                if (attempts < 100) {
+                    traps.push({ x: trapX, y: trapY });
+                }
+            }
+        }
+        
+        // Add teleporters to the maze
+        function addTeleporters(count) {
+            for (let i = 0; i < count * 2; i++) {
+                let teleporterX, teleporterY;
+                let attempts = 0;
+                
+                // Find a valid position for teleporter
+                do {
+                    teleporterX = Math.floor(Math.random() * rows);
+                    teleporterY = Math.floor(Math.random() * cols);
+                    attempts++;
+                } while (
+                    (maze[teleporterX][teleporterY] !== 0 || 
+                    (teleporterX === start.x && teleporterY === start.y) ||
+                    (teleporterX === exit.x && teleporterY === exit.y) ||
+                    teleporters.some(t => t.x === teleporterX && t.y === teleporterY)) &&
+                    attempts < 100
+                );
+                
+                if (attempts < 100) {
+                    teleporters.push({ x: teleporterX, y: teleporterY });
+                }
+            }
+        }
+        
+        // Draw the maze on the screen
+        function drawMaze() {
+            // Calculate cell size based on maze dimensions
+            const maxWidth = Math.min(1200, window.innerWidth * 0.9);
+            const maxHeight = Math.min(600, window.innerHeight * 0.6);
+            
+            const cellWidth = Math.max(MIN_CELL_SIZE, Math.floor(maxWidth / cols));
+            const cellHeight = Math.max(MIN_CELL_SIZE, Math.floor(maxHeight / rows));
+            
+            // Set grid dimensions
+            mazeElement.style.gridTemplateColumns = `repeat(${cols}, ${cellWidth}px)`;
+            mazeElement.style.gridTemplateRows = `repeat(${rows}, ${cellHeight}px)`;
+            
+            mazeElement.innerHTML = '';
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = `${cellWidth}px`;
+                    cell.style.height = `${cellHeight}px`;
+                    
+                    // Set cell type
+                    if (maze[i][j] === 1) {
+                        cell.classList.add('wall');
+                    } else {
+                        cell.classList.add('path');
+                        
+                        // Check if cell is a trap
+                        const isTrap = traps.some(trap => trap.x === i && trap.y === j);
+                        if (isTrap) {
+                            cell.classList.add('trap');
+                        }
+                        
+                        // Check if cell is a teleporter
+                        const isTeleporter = teleporters.some(tp => tp.x === i && tp.y === j);
+                        if (isTeleporter) {
+                            cell.classList.add('teleporter');
+                        }
+                    }
+                    
+                    // Mark start, exit, and player
+                    if (i === start.x && j === start.y) {
+                        cell.classList.add('start');
+                    } else if (i === exit.x && j === exit.y) {
+                        cell.classList.add('exit');
+                    } else if (i === player.x && j === player.y) {
+                        cell.classList.add('player');
+                    }
+                    
+                    mazeElement.appendChild(cell);
+                }
+            }
+        }
+        
+        // Start the timer
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            seconds = 0;
+            updateTimeDisplay();
+            
+            timer = setInterval(() => {
+                seconds++;
+                updateTimeDisplay();
+                
+                // Check time limit for higher levels
+                if (timeLimit > 0 && seconds >= timeLimit) {
+                    timeUp();
+                }
+            }, 1000);
+        }
+        
+        // Update time display with warning for time limit
+        function updateTimeDisplay() {
+            if (timeLimit > 0) {
+                const timeLeft = timeLimit - seconds;
+                if (timeLeft <= 10) {
+                    timeValueElement.style.color = "#f44336";
+                    timeValueElement.textContent = `${timeLeft}s`;
+                } else {
+                    timeValueElement.style.color = "#4CAF50";
+                    timeValueElement.textContent = `${seconds}s (${timeLeft}s left)`;
+                }
+            } else {
+                timeValueElement.style.color = "#4CAF50";
+                timeValueElement.textContent = `${seconds}s`;
+            }
+        }
+        
+        // Time's up handler
+        function timeUp() {
+            clearInterval(timer);
+            alert(`Time's up! You didn't solve the maze in ${timeLimit} seconds. Try again!`);
+            resetPlayerPosition();
+        }
+        
+        // Reset the timer
+        function resetTimer() {
+            if (timer) clearInterval(timer);
+            seconds = 0;
+            updateTimeDisplay();
+            timer = setInterval(() => {
+                seconds++;
+                updateTimeDisplay();
+                
+                // Check time limit for higher levels
+                if (timeLimit > 0 && seconds >= timeLimit) {
+                    timeUp();
+                }
+            }, 1000);
+        }
+        
+        // Move the player
+        function movePlayer(dx, dy) {
+            if (isSolving || isPaused) return;
+            
+            const newX = player.x + dx;
+            const newY = player.y + dy;
+            
+            // Check if move is valid
+            if (
+                newX >= 0 && newX < rows &&
+                newY >= 0 && newY < cols &&
+                maze[newX][newY] === 0
+            ) {
+                player.x = newX;
+                player.y = newY;
+                steps++;
+                stepsValueElement.textContent = steps;
+                
+                // Check for traps
+                const trapIndex = traps.findIndex(trap => trap.x === newX && trap.y === newY);
+                if (trapIndex !== -1) {
+                    alert("You stepped on a trap! Back to start!");
+                    resetPlayerPosition();
+                    return;
+                }
+                
+                // Check for teleporters
+                const teleporterIndex = teleporters.findIndex(tp => tp.x === newX && tp.y === newY);
+                if (teleporterIndex !== -1) {
+                    // Find a different teleporter to teleport to
+                    const otherTeleporters = teleporters.filter((tp, idx) => idx !== teleporterIndex);
+                    if (otherTeleporters.length > 0) {
+                        const target = otherTeleporters[Math.floor(Math.random() * otherTeleporters.length)];
+                        alert("Teleported to a random location!");
+                        player.x = target.x;
+                        player.y = target.y;
+                    }
+                }
+                
+                drawMaze();
+                checkWin();
+            }
+        }
+        
+        // Reset player to start position
+        function resetPlayerPosition() {
+            player = { x: start.x, y: start.y };
+            steps = 0;
+            stepsValueElement.textContent = steps;
+            drawMaze();
+            resetTimer();
+        }
+        
+        // Check if player has reached the exit
+        function checkWin() {
+            if (player.x === exit.x && player.y === exit.y) {
+                clearInterval(timer);
+                
+                // Calculate score
+                const timeScore = timeLimit > 0 ? Math.max(0, timeLimit - seconds) * 10 + timeBonus : 1000 - seconds;
+                const stepScore = Math.max(0, 500 - steps * 2);
+                const levelBonus = level * 200;
+                const mazeSizeBonus = (rows * cols) / 10;
+                
+                const levelScore = Math.floor(timeScore + stepScore + levelBonus + mazeSizeBonus);
+                score += levelScore;
+                
+                // Increase level (capped at MAX_LEVEL)
+                if (level < MAX_LEVEL) {
+                    level++;
+                }
+                
+                // Show win message
+                setTimeout(() => {
+                    alert(`Congratulations! Maze Solved!\n\n` +
+                          `Level: ${level-1}\n` +
+                          `Time: ${seconds}s\n` +
+                          `Steps: ${steps}\n` +
+                          `Score for this level: ${levelScore}\n` +
+                          `Total Score: ${score}\n\n` +
+                          `Next maze will be more challenging!`);
+                    
+                    // Generate next level maze
+                    calculateMazeSize();
+                    createEmptyMaze();
+                    generateMaze();
+                    drawMaze();
+                    updateUI();
+                }, 300);
+            }
+        }
+        
+        // Solve the maze using BFS algorithm
+        function solveMaze() {
+            if (isSolving) return;
+            
+            isSolving = true;
+            
+            // BFS algorithm to find shortest path
+            const queue = [];
+            const visited = new Set();
+            const parent = new Map();
+            
+            // Start BFS from player position
+            const startKey = `${player.x},${player.y}`;
+            queue.push({ x: player.x, y: player.y });
+            visited.add(startKey);
+            
+            // Directions: up, right, down, left
+            const directions = [
+                { dx: -1, dy: 0 },
+                { dx: 0, dy: 1 },
+                { dx: 1, dy: 0 },
+                { dx: 0, dy: -1 }
+            ];
+            
+            // BFS loop
+            let found = false;
+            let interval = setInterval(() => {
+                if (queue.length === 0 || isPaused) return;
+                
+                const current = queue.shift();
+                
+                // Check if we reached the exit
+                if (current.x === exit.x && current.y === exit.y) {
+                    found = true;
+                    
+                    // Reconstruct path
+                    const solutionPath = [];
+                    let node = current;
+                    while (node) {
+                        solutionPath.unshift(node);
+                        const parentKey = `${node.x},${node.y}`;
+                        node = parent.get(parentKey);
+                    }
+                    
+                    clearInterval(interval);
+                    
+                    // Animate solution
+                    animateSolution(solutionPath, 0);
+                    return;
+                }
+                
+                // Explore neighbors
+                for (const dir of directions) {
+                    const newX = current.x + dir.dx;
+                    const newY = current.y + dir.dy;
+                    
+                    // Check if neighbor is valid
+                    if (
+                        newX >= 0 && newX < rows &&
+                        newY >= 0 && newY < cols &&
+                        maze[newX][newY] === 0
+                    ) {
+                        const neighborKey = `${newX},${newY}`;
+                        
+                        if (!visited.has(neighborKey)) {
+                            visited.add(neighborKey);
+                            queue.push({ x: newX, y: newY });
+                            
+                            // Store parent for path reconstruction
+                            parent.set(neighborKey, current);
+                        }
+                    }
+                }
+                
+            }, 30); // Speed of visualization
+            
+            // If solution not found after a while
+            setTimeout(() => {
+                if (!found) {
+                    clearInterval(interval);
+                    isSolving = false;
+                    alert("No solution found for this maze!");
+                }
+            }, 10000);
+        }
+        
+        // Animate the solution path
+        function animateSolution(solutionPath, index) {
+            if (index >= solutionPath.length) {
+                // Move player along solution path
+                movePlayerAlongSolution(solutionPath, 0);
+                return;
+            }
+            
+            const cell = solutionPath[index];
+            
+            // Highlight the cell
+            const cellElement = document.querySelector(`.cell[style*="grid-area: ${cell.x+1} / ${cell.y+1}"]`);
+            if (cellElement) {
+                cellElement.classList.add('visited');
+            }
+            
+            setTimeout(() => {
+                animateSolution(solutionPath, index + 1);
+            }, 30);
+        }
+        
+        // Move player along solution
+        function movePlayerAlongSolution(solutionPath, index) {
+            if (index >= solutionPath.length) {
+                isSolving = false;
+                return;
+            }
+            
+            const cell = solutionPath[index];
+            player.x = cell.x;
+            player.y = cell.y;
+            steps++;
+            stepsValueElement.textContent = steps;
+            
+            drawMaze();
+            
+            if (index === solutionPath.length - 1) {
+                setTimeout(() => {
+                    checkWin();
+                    isSolving = false;
+                }, 300);
+                return;
+            }
+            
+            setTimeout(() => {
+                movePlayerAlongSolution(solutionPath, index + 1);
+            }, 100);
+        }
+        
+        // Toggle pause state
+        function togglePause() {
+            isPaused = !isPaused;
+            pauseButton.textContent = isPaused ? "Resume Game" : "Pause Game";
+            
+            if (isPaused) {
+                clearInterval(timer);
+            } else {
+                startTimer();
+            }
+        }
+        
+        // Restart the game completely
+        function restartGame() {
+            if (confirm("Are you sure you want to restart? You'll lose all progress.")) {
+                level = 1;
+                score = 0;
+                calculateMazeSize();
+                createEmptyMaze();
+                generateMaze();
+                drawMaze();
+                updateUI();
+                resetTimer();
+            }
+        }
+        
+        // Update UI elements
+        function updateUI() {
+            levelValueElement.textContent = level;
+            scoreValueElement.textContent = score;
+            difficultyValueElement.textContent = difficulty;
+            sizeValueElement.textContent = `${rows}×${cols}`;
+            
+            // Update progress bar
+            const progress = (level / MAX_LEVEL) * 100;
+            progressBarElement.style.width = `${progress}%`;
+        }
+        
+        // Update challenges display
+        function updateChallengesDisplay() {
+            challengeListElement.innerHTML = '';
+            activeChallenges.forEach(challenge => {
+                const badge = document.createElement('div');
+                badge.className = 'challenge-badge';
+                badge.textContent = challenge;
+                challengeListElement.appendChild(badge);
+            });
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        movePlayer(-1, 0);
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        movePlayer(0, 1);
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        movePlayer(1, 0);
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        movePlayer(0, -1);
+                        break;
+                }
+            });
+            
+            // Button event listeners
+            generateButton.addEventListener('click', () => {
+                calculateMazeSize();
+                createEmptyMaze();
+                generateMaze();
+                drawMaze();
+            });
+            
+            solveButton.addEventListener('click', solveMaze);
+            
+            resetButton.addEventListener('click', resetPlayerPosition);
+            
+            pauseButton.addEventListener('click', togglePause);
+            
+            restartButton.addEventListener('click', restartGame);
+        }
+        
+        // Initialize the game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (maze.length > 0) {
+                drawMaze();
+            }
+        });
+    </script>
+</body>
+</html>

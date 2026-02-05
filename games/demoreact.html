@@ -1,0 +1,27 @@
+function App() {
+  return (
+    <div style={{
+      height: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      fontFamily: "Arial"
+    }}>
+      <h1>Hello React 👋</h1>
+      <p>This is my first running React program.</p>
+      <button
+        onClick={() => alert("Button clicked!")}
+        style={{
+          padding: "10px 20px",
+          fontSize: "16px",
+          cursor: "pointer"
+        }}
+      >
+        Click Me
+      </button>
+    </div>
+  );
+}
+
+export default App;

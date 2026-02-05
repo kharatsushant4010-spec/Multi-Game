@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rock Paper Scissors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+      body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Blurred background image */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("images/coin.jpg")
+                center / cover no-repeat;
+    filter: blur(12px);
+    transform: scale(1.1); /* avoids edge blur gaps */
+    z-index: -2;
+}
+
+/* Dark overlay for readability */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: -1;
+}
+
+
+/* Blurred background image */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("images/rockpaperscissor.jpeg")
+                center / cover no-repeat;
+    filter: blur(12px);
+    transform: scale(1.1); /* avoids edge blur gaps */
+    z-index: -2;
+}
+
+/* Dark overlay for readability */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: -1;
+}
+
+
+
+.container {
+    width: 420px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+.mode-select {
+    margin: 15px 0;
+}
+
+.mode-select button {
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background: #334155;
+    color: white;
+    transition: 0.3s;
+}
+
+.mode-select button.active,
+.mode-select button:hover {
+    background: #22c55e;
+}
+
+.scoreboard {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.score {
+    width: 45%;
+    background: rgba(255,255,255,0.08);
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.score span {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.choices {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.choice {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #1e293b, #020617);
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.choice:hover {
+    transform: scale(1.15) rotate(8deg);
+}
+
+.result {
+    min-height: 30px;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.info {
+    margin-top: 10px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.reset {
+    margin-top: 20px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Rock Paper Scissors</h1>
+
+    <div class="mode-select">
+        <button class="active" onclick="setMode('cpu')">Vs Computer</button>
+        <button onclick="setMode('pvp')">2 Players</button>
+    </div>
+
+    <div class="scoreboard">
+        <div class="score">
+            <div id="p1Label">Player 1</div>
+            <span id="p1Score">0</span>
+        </div>
+        <div class="score">
+            <div id="p2Label">Computer</div>
+            <span id="p2Score">0</span>
+        </div>
+    </div>
+
+    <div class="choices">
+        <div class="choice" onclick="player1Move('rock')">✊</div>
+        <div class="choice" onclick="player1Move('paper')">✋</div>
+        <div class="choice" onclick="player1Move('scissors')">✌</div>
+    </div>
+
+    <div class="result" id="result">Choose your move</div>
+
+    <div class="info" id="info">
+        2 Player Mode: Player 2 uses Numpad 1 / 2 / 3
+    </div>
+
+    <button class="reset" onclick="resetGame()">Reset</button>
+</div>
+
+<script>
+let mode = "cpu";
+let p1Score = 0;
+let p2Score = 0;
+let p1Choice = null;
+
+function setMode(m) {
+    mode = m;
+    resetGame();
+    document.querySelectorAll(".mode-select button")
+        .forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+
+    document.getElementById("p2Label").textContent =
+        mode === "cpu" ? "Computer" : "Player 2";
+}
+
+function player1Move(choice) {
+    if (mode === "cpu") {
+        play(choice, randomChoice());
+    } else {
+        p1Choice = choice;
+        document.getElementById("result").textContent =
+            "Player 1 locked! Player 2 choose (Numpad)";
+    }
+}
+
+document.addEventListener("keydown", e => {
+    if (mode !== "pvp" || !p1Choice) return;
+
+    if (e.code === "Numpad1") play(p1Choice, "rock");
+    if (e.code === "Numpad2") play(p1Choice, "paper");
+    if (e.code === "Numpad3") play(p1Choice, "scissors");
+});
+
+function play(p1, p2) {
+    let result = "";
+
+    if (p1 === p2) result = "🤝 Draw";
+    else if (
+        (p1 === "rock" && p2 === "scissors") ||
+        (p1 === "paper" && p2 === "rock") ||
+        (p1 === "scissors" && p2 === "paper")
+    ) {
+        result = "🎉 Player 1 Wins";
+        p1Score++;
+    } else {
+        result = mode === "cpu" ? "💀 Computer Wins" : "🎉 Player 2 Wins";
+        p2Score++;
+    }
+
+    document.getElementById("p1Score").textContent = p1Score;
+    document.getElementById("p2Score").textContent = p2Score;
+    document.getElementById("result").textContent =
+        `P1: ${emoji(p1)} | P2: ${emoji(p2)} → ${result}`;
+
+    p1Choice = null;
+}
+
+function randomChoice() {
+    return ["rock","paper","scissors"][Math.floor(Math.random()*3)];
+}
+
+function emoji(c) {
+    return c === "rock" ? "✊" : c === "paper" ? "✋" : "✌";
+}
+
+function resetGame() {
+    p1Score = p2Score = 0;
+    p1Choice = null;
+    document.getElementById("p1Score").textContent = 0;
+    document.getElementById("p2Score").textContent = 0;
+    document.getElementById("result").textContent = "Choose your move";
+}
+</script>
+
+</body>
+</html>

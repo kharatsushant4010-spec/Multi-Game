@@ -1,0 +1,46 @@
+plan 
+schedule task
+assign resources
+mangage and identify risk and issues
+maintain day to day communications 
+
+
+Here is a clear, detailed, exam-oriented explanation of all topics you listed. I’ve explained each concept in simple language so you can write directly in your notes.
+
+1. Basic Organizational Structures in Software Development
+
+Software development teams can be arranged in different organizational structures depending on company goals, project type, and team size.
+
+a) Functional Structure
+
+Organization is divided based on functions (e.g., Development, Testing, Design, Deployment).
+
+Each team works separately under its own manager.
+
+Pros: High specialization, good for large companies.
+
+Cons: Slow communication between teams, chances of delays.
+
+b) Project-Based Structure
+
+Teams are formed specifically for a project.
+
+Each team contains developers, testers, designers, analysts, etc.
+
+A Project Manager controls the whole project team.
+
+Pros: Faster communication, clear responsibility.
+
+Cons: Expensive because dedicated teams are needed.
+
+c) Matrix Structure (Most common in IT)
+
+Mix of functional + project-based structure.
+
+Employees report to both: Functional Manager & Project Manager.
+
+Example: A developer works under Coding Department + also works in Project A.
+
+Pros: Good resource usage and flexibility.
+
+Cons: Dual reporting can cause conflicts.

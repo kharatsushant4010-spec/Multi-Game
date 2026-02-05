@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Math Quiz Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --bg1: #0f2027;
+    --bg2: #203a43;
+    --bg3: #2c5364;
+    --accent: #00ffd5;
+    --wrong: #ff4d4d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Blurred background image */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("math.avif")
+                center / cover no-repeat;
+    filter: blur(12px);
+    transform: scale(1.1); /* avoids edge blur gaps */
+    z-index: -2;
+}
+
+/* Dark overlay for readability */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: -1;
+}
+
+
+.quiz-container {
+    width: 440px;          /* increased size */
+    min-height: 550px;     /* gives breathing space */
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: fadeIn 1s ease;
+}
+.quiz-container {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+h1 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+.progress {
+    height: 8px;
+    width: 100%;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), #00bcd4);
+    transition: width 0.4s ease;
+}
+
+.timer {
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    margin-bottom: 15px;
+    animation: pulse 1s infinite;
+}
+
+.question {
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 25px;
+    animation: slideIn 0.6s ease;
+}
+
+.options button {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.options button:hover {
+    transform: scale(1.05);
+    background: rgba(0,255,213,0.3);
+}
+
+.options button.correct {
+    background: rgba(0,255,213,0.6);
+    box-shadow: 0 0 15px var(--accent);
+}
+
+.options button.wrong {
+    background: rgba(255,77,77,0.6);
+    box-shadow: 0 0 15px var(--wrong);
+}
+
+.score {
+    text-align: center;
+    margin-top: 15px;
+    color: var(--accent);
+    font-size: 18px;
+    animation: bounce 0.5s;
+}
+
+.restart {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(90deg, var(--accent), #00bcd4);
+    font-size: 16px;
+    cursor: pointer;
+    display: none;
+}
+
+.restart:hover {
+    transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {opacity: 0; transform: scale(0.8);}
+    to {opacity: 1; transform: scale(1);}
+}
+
+@keyframes slideIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes bounce {
+    0% {transform: scale(0.9);}
+    50% {transform: scale(1.1);}
+    100% {transform: scale(1);}
+}
+
+@keyframes pulse {
+    0% {opacity: 1;}
+    50% {opacity: 0.6;}
+    100% {opacity: 1;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-container">
+    <h1>Math Quiz</h1>
+
+    <div class="progress">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+
+    <div class="timer" id="timer">Time: 10</div>
+
+    <div class="question" id="question"></div>
+
+    <div class="options" id="options"></div>
+
+    <div class="score" id="score"></div>
+
+    <button class="restart" id="restart">Restart Quiz</button>
+</div>
+
+<script>
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const scoreEl = document.getElementById("score");
+const progressBar = document.getElementById("progress");
+const timerEl = document.getElementById("timer");
+const restartBtn = document.getElementById("restart");
+
+let current = 0;
+let score = 0;
+let timer;
+let timeLeft = 10;
+
+const totalQuestions = 10;
+
+function generateQuestion() {
+    const a = Math.floor(Math.random() * 20) + 1;
+    const b = Math.floor(Math.random() * 20) + 1;
+    const operators = ['+', '-', '*'];
+    const op = operators[Math.floor(Math.random() * operators.length)];
+
+    let answer;
+    if (op === '+') answer = a + b;
+    if (op === '-') answer = a - b;
+    if (op === '*') answer = a * b;
+
+    const options = new Set([answer]);
+    while (options.size < 4) {
+        options.add(answer + Math.floor(Math.random() * 10 - 5));
+    }
+
+    return {
+        question: `${a} ${op} ${b} = ?`,
+        answer,
+        options: [...options].sort(() => Math.random() - 0.5)
+    };
+}
+
+let currentQuestion;
+
+function loadQuestion() {
+    if (current >= totalQuestions) {
+        endGame();
+        return;
+    }
+
+    progressBar.style.width = `${(current / totalQuestions) * 100}%`;
+
+    currentQuestion = generateQuestion();
+    questionEl.textContent = currentQuestion.question;
+    optionsEl.innerHTML = "";
+    scoreEl.textContent = "";
+
+    timeLeft = 10;
+    timerEl.textContent = `Time: ${timeLeft}`;
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time: ${timeLeft}`;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            current++;
+            loadQuestion();
+        }
+    }, 1000);
+
+    currentQuestion.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(btn, opt);
+        optionsEl.appendChild(btn);
+    });
+}
+
+function checkAnswer(button, selected) {
+    clearInterval(timer);
+
+    const buttons = document.querySelectorAll(".options button");
+    buttons.forEach(btn => btn.disabled = true);
+
+    if (selected === currentQuestion.answer) {
+        button.classList.add("correct");
+        score++;
+        scoreEl.textContent = "✔ Correct!";
+    } else {
+        button.classList.add("wrong");
+        scoreEl.textContent = "✖ Wrong!";
+    }
+
+    current++;
+    setTimeout(loadQuestion, 1000);
+}
+
+function endGame() {
+    questionEl.textContent = "Quiz Completed 🎉";
+    optionsEl.innerHTML = "";
+    timerEl.textContent = "";
+    progressBar.style.width = "100%";
+    scoreEl.textContent = `Your Score: ${score} / ${totalQuestions}`;
+    restartBtn.style.display = "block";
+}
+
+restartBtn.onclick = () => {
+    current = 0;
+    score = 0;
+    restartBtn.style.display = "none";
+    loadQuestion();
+};
+
+loadQuestion();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Speed Test</title>
+
+<style>
+/* ===== SAME UI - NO CHANGES ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:'Roboto Mono','Courier New',monospace;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    overflow:hidden;
+    position:relative;
+}
+
+/* BACKGROUND IMAGE LAYER */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+        linear-gradient(
+            rgba(50,52,55,0.75),
+            rgba(50,52,55,0.75)
+        ),
+        url("images/type.jpeg"); /* 👈 YOUR IMAGE */
+    background-size:cover;
+    background-position:center;
+    filter:blur(8px);
+    transform:scale(1.05);
+    z-index:-2;
+}
+
+/* DARK OVERLAY FOR BETTER TEXT VISIBILITY */
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.35);
+    z-index:-1;
+}
+
+/* KEEP UI ABOVE BACKGROUND */
+.container{
+    position:relative;
+    z-index:1;
+}
+
+.container{max-width:1000px;width:100%}
+.header{text-align:center;margin-bottom:60px}
+.logo{color:#e2b714;font-size:1.8em;letter-spacing:2px;margin-bottom:20px}
+.config-bar{display:flex;justify-content:center;gap:20px;margin-bottom:40px;flex-wrap:wrap}
+.config-item{padding:8px 15px;border-radius:8px;cursor:pointer}
+.config-item.active{color:#e2b714}
+.stats{display:flex;justify-content:center;gap:40px;margin-bottom:40px}
+.stat-box{text-align:center}
+.stat-value{font-size:2.5em;color:#e2b714}
+#textDisplay{
+    font-size:1.5em;
+    line-height:2.2;
+    min-height:200px;
+    text-align:center;
+    user-select:none
+}
+.char{color:#646669}
+.correct{color:#d1d0c5}
+.incorrect{color:#ca4754}
+.current{
+    border-left:2px solid #e2b714;
+    animation:blink 1s infinite
+}
+@keyframes blink{
+    0%,49%{border-color:#e2b714}
+    50%,100%{border-color:transparent}
+}
+#inputArea{
+    position:absolute;
+    left:-9999px;
+    opacity:0
+}
+.button-group{text-align:center;margin-top:40px}
+button{
+    padding:12px 25px;
+    background:#2c2e31;
+    color:#646669;
+    border:none;border-radius:8px;
+    cursor:pointer
+}
+.result{
+    background:#2c2e31;
+    padding:40px;
+    border-radius:15px;
+    margin-top:40px;
+    text-align:center;
+    display:none
+}
+.result h2{color:#e2b714;margin-bottom:30px}
+.result-stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:20px
+}
+.result-item{background:#323437;padding:20px;border-radius:10px}
+.value{color:#e2b714;font-size:2em}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+<div class="logo">⌨ SK_type</div>
+</div>
+
+<div class="stats">
+<div class="stat-box"><div>wpm</div><div class="stat-value" id="wpm">0</div></div>
+<div class="stat-box"><div>acc</div><div class="stat-value" id="accuracy">100%</div></div>
+<div class="stat-box"><div>time</div><div class="stat-value" id="timer">30</div></div>
+</div>
+
+<div id="textDisplay"></div>
+<input type="text" id="inputArea" autocomplete="off">
+
+<div class="button-group">
+<button id="resetBtn">⟳ restart</button>
+</div>
+
+<div class="result" id="result">
+<h2>Test Complete</h2>
+<div class="result-stats">
+<div class="result-item"><div>wpm</div><div class="value" id="finalWpm"></div></div>
+<div class="result-item"><div>accuracy</div><div class="value" id="finalAccuracy"></div></div>
+<div class="result-item"><div>characters</div><div class="value" id="finalChars"></div></div>
+<div class="result-item"><div>errors</div><div class="value" id="finalErrors"></div></div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* ===== IMPROVED BACKEND LOGIC ===== */
+
+const texts=[
+"the quick brown fox jumps over the lazy dog programming improves logic",
+"practice typing every day to increase speed and accuracy significantly",
+"javascript typing tests require precise character level tracking",
+"consistency and patience are keys to mastering typing skills",
+"accuracy matters more than speed when learning to type"
+];
+
+let text="";
+let index=0;
+let errors=0;
+let startTime=null;
+let timer=30;
+let interval=null;
+let started=false;
+
+const display=document.getElementById("textDisplay");
+const input=document.getElementById("inputArea");
+const wpmEl=document.getElementById("wpm");
+const accEl=document.getElementById("accuracy");
+const timerEl=document.getElementById("timer");
+const result=document.getElementById("result");
+
+function loadText(){
+    text=texts[Math.floor(Math.random()*texts.length)];
+    display.innerHTML="";
+    text.split("").forEach((c,i)=>{
+        const span=document.createElement("span");
+        span.textContent=c;
+        span.className="char";
+        if(i===0)span.classList.add("current");
+        display.appendChild(span);
+    });
+}
+
+function start(){
+    if(started)return;
+    started=true;
+    startTime=Date.now();
+    interval=setInterval(()=>{
+        timer--;
+        timerEl.textContent=timer;
+        if(timer<=0)finish();
+    },1000);
+}
+
+function finish(){
+    clearInterval(interval);
+    input.disabled=true;
+    const time=(Date.now()-startTime)/60000;
+    const wpm=Math.round((index/5)/time)||0;
+    const acc=Math.round(((index-errors)/index)*100)||0;
+
+    document.getElementById("finalWpm").textContent=wpm;
+    document.getElementById("finalAccuracy").textContent=acc+"%";
+    document.getElementById("finalChars").textContent=index;
+    document.getElementById("finalErrors").textContent=errors;
+    result.style.display="block";
+}
+
+input.addEventListener("keydown",e=>{
+    if(!started)start();
+
+    const chars=document.querySelectorAll(".char");
+
+    if(e.key==="Backspace"){
+        if(index>0){
+            index--;
+            chars[index].className="char current";
+        }
+        e.preventDefault();
+        return;
+    }
+
+    if(e.key.length!==1)return;
+
+    const expected=text[index];
+    if(e.key===expected){
+        chars[index].classList.add("correct");
+    }else{
+        chars[index].classList.add("incorrect");
+        errors++;
+    }
+    chars[index].classList.remove("current");
+    index++;
+    if(index<chars.length)chars[index].classList.add("current");
+
+    const elapsed=(Date.now()-startTime)/60000;
+    wpmEl.textContent=Math.round((index/5)/elapsed)||0;
+    accEl.textContent=Math.round(((index-errors)/index)*100)+"%";
+
+    if(index===text.length)finish();
+});
+
+document.getElementById("resetBtn").onclick=()=>location.reload();
+
+loadText();
+input.focus();
+</script>
+</body>
+</html>

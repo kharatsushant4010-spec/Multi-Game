@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GameZone - Your Ultimate Gaming Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: 
+        linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)),
+        url("https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600") no-repeat center center fixed;
+    background-size: cover;
+    color: #ffffff;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* ===== ANIMATED BACKGROUND PARTICLES ===== */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: float-particle 15s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes float-particle {
+    0%, 100% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) translateX(50px) scale(0);
+        opacity: 0;
+    }
+}
+
+/* ===== HEADER ===== */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    animation: slideDown 0.6s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    position: relative;
+}
+
+.logo::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.logo:hover::before {
+    opacity: 1;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+.logo:hover {
+    transform: scale(1.08) rotate(-2deg);
+    text-shadow: 0 0 25px rgba(255, 255, 255, 1);
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #000000, #1a1a1a);
+    border: 2px solid #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    animation: float 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.logo-icon::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.search-box {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 40px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 14px 50px 14px 20px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    font-size: 14px;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #ffffff;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px) scale(1.02);
+}
+
+.search-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ffffff;
+    pointer-events: none;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.nav {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.nav a {
+    padding: 12px 24px;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.nav a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ffffff, transparent);
+    transform: translateX(-50%);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.nav a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.nav a:hover::before {
+    width: 90%;
+}
+
+.nav a:hover::after {
+    opacity: 1;
+}
+
+.nav a:hover {
+    color: #ffffff;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== MAIN CONTAINER ===== */
+.main-container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== LANDING VIEW ===== */
+.landing-view {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    animation: fadeIn 0.8s ease;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: brightness(0.8);
+}
+
+.landing-view:hover .landing-bg {
+    transform: scale(1.08);
+    filter: brightness(1);
+}
+
+.landing-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
+    z-index: 2;
+    transition: background 0.5s ease;
+}
+
+.landing-view:hover .landing-overlay {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+}
+
+.landing-content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 40px;
+}
+
+.landing-title {
+    font-size: 80px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 20px;
+    animation: slideUp 0.8s ease;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 80px rgba(255, 255, 255, 0.4);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+}
+
+.landing-title::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.3);
+    animation: glitch 3s infinite;
+}
+
+@keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+}
+
+.landing-view:hover .landing-title {
+    transform: scale(1.08);
+    letter-spacing: 12px;
+    text-shadow: 0 0 60px rgba(255, 255, 255, 1), 0 0 120px rgba(255, 255, 255, 0.6);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-subtitle {
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 40px;
+    animation: slideUp 0.8s ease 0.2s backwards;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    transition: all 0.5s ease;
+    letter-spacing: 2px;
+}
+
+.landing-view:hover .landing-subtitle {
+    transform: scale(1.05);
+    letter-spacing: 4px;
+}
+
+.click-hint {
+    font-size: 16px;
+    color: #ffffff;
+    margin-top: 20px;
+    opacity: 0.8;
+    animation: pulse 2s ease-in-out infinite;
+    padding: 12px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    display: inline-block;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.landing-view:hover .click-hint {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* ===== WELCOME VIEW ===== */
+.welcome-view {
+    display: none;
+    animation: fadeIn 0.8s ease;
+    padding: 40px;
+    min-height: calc(100vh - 80px);
+    position: relative;
+}
+
+.welcome-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.9)),
+        url("https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600") center/cover no-repeat fixed;
+    filter: blur(8px);
+    z-index: 1;
+}
+
+.welcome-view > * {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 60px 20px;
+    margin-bottom: 40px;
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 16px;
+    animation: slideUp 0.8s ease;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.7);
+    letter-spacing: 3px;
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: #ffffff;
+    animation: slideUp 0.8s ease 0.2s backwards;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    animation: fadeIn 0.8s ease 0.4s backwards;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ===== GAME CARD ===== */
+.game-card {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.game-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
+}
+
+.game-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 2px;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.game-card:hover::before {
+    left: 100%;
+}
+
+.game-card:hover::after {
+    opacity: 1;
+}
+
+.game-card:hover {
+    transform: translateY(-15px) scale(1.03);
+    box-shadow: 0 20px 60px rgba(255, 255, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.game-card:active {
+    transform: translateY(-10px) scale(0.98);
+}
+
+.game-thumbnail {
+    width: 100%;
+    height: 180px;
+    background: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.game-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    transition: transform 0.5s ease, filter 0.5s ease;
+    filter: brightness(0.8);
+}
+
+.game-card:hover .game-thumbnail img {
+    transform: scale(1.15);
+    filter: brightness(1.1);
+}
+
+.game-thumbnail-icon {
+    position: relative;
+    z-index: 1;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    font-size: 64px;
+    transition: all 0.5s ease;
+}
+
+.game-card:hover .game-thumbnail-icon {
+    transform: scale(1.2) rotate(10deg);
+    text-shadow: 0 0 40px rgba(255, 255, 255, 1);
+}
+
+.game-thumbnail::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.6));
+    z-index: 1;
+}
+
+.game-card:hover .game-thumbnail {
+    animation: pulseCard 0.6s ease;
+}
+
+@keyframes pulseCard {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.game-info {
+    padding: 24px;
+    position: relative;
+}
+
+.game-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.game-card:hover .game-name {
+    transform: translateX(5px);
+    text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+}
+
+.game-description {
+    font-size: 14px;
+    color: #ffffff;
+    margin-bottom: 14px;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover .game-description {
+    opacity: 1;
+    transform: translateX(5px);
+}
+
+.game-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.game-tag {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.game-card:hover .game-tag {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+/* ===== GAME VIEW ===== */
+.game-view {
+    display: none;
+    animation: fadeInScale 0.6s ease;
+    min-height: calc(100vh - 80px);
+    position: relative;
+}
+
+.game-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.9)),
+        url("https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600") center/cover no-repeat fixed;
+    filter: blur(8px);
+    z-index: 1;
+}
+
+.game-view > * {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.game-container {
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    margin: 40px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+}
+
+.game-header {
+    padding: 24px 28px;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(20px);
+}
+
+.back-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+}
+
+.back-button:hover {
+    background: #ffffff;
+    color: #000000;
+    transform: translateX(-8px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.5);
+}
+
+.back-button:active {
+    transform: translateX(-5px) scale(0.98);
+}
+
+.game-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.control-btn {
+    padding: 12px 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.control-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.control-btn:hover::before {
+    opacity: 1;
+}
+
+.control-btn:hover {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #000000;
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(255, 255, 255, 0.5);
+}
+
+.control-btn:active {
+    transform: translateY(-2px) scale(0.95);
+}
+
+.game-frame-container {
+    width: 100%;
+    height: calc(100vh - 240px);
+    background: #000000;
+    position: relative;
+    overflow: auto;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    overflow: auto;
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    margin-top: 20px;
+    color: #ffffff;
+    font-size: 16px;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* ===== SCROLL BAR ===== */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000000;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    border: 2px solid #000000;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .landing-title {
+        font-size: 48px;
+        letter-spacing: 4px;
+    }
+    
+    .hero-title {
+        font-size: 36px;
+    }
+    
+    .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .search-box {
+        margin: 0 20px;
+    }
+    
+    .nav a {
+        display: none;
+    }
+    
+    .game-container {
+        margin: 20px;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- Animated Particles Background -->
+<div class="particles" id="particles"></div>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo" onclick="handleLogoClick()">
+        <div class="logo-icon">
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100" alt="GameZone Logo">
+        </div>
+        <span>GameZone</span>
+    </div>
+    
+    <div class="search-box" id="searchContainer" style="display: none;">
+        <input type="text" placeholder="Search for games..." id="searchInput">
+        <span class="search-icon">🔍</span>
+    </div>
+    
+    <div class="nav" id="navMenu">
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+    </div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="main-container">
+    
+    <!-- LANDING VIEW -->
+    <div class="landing-view" id="landingView" onclick="showWelcome()">
+        <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1600" alt="GameZone" class="landing-bg">
+        <div class="landing-overlay"></div>
+        <div class="landing-content">
+            <h1 class="landing-title" data-text="GameZone">GameZone</h1>
+            <p class="landing-subtitle">Your Ultimate Gaming Hub</p>
+            <p class="click-hint">Click anywhere to start ▶</p>
+        </div>
+    </div>
+    
+    <!-- WELCOME VIEW (Game Selection) -->
+    <div class="welcome-view" id="welcomeView">
+        <div class="hero-section">
+            <h1 class="hero-title">Welcome to GameZone</h1>
+            <p class="hero-subtitle">Choose your favorite game and start playing!</p>
+        </div>
+        
+        <div class="games-grid" id="gamesGrid">
+            <!-- Game cards will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- GAME VIEW (Playing) -->
+    <div class="game-view" id="gameView">
+        <div class="game-container">
+            <div class="game-header">
+                <button class="back-button" onclick="showWelcome()">
+                    <span>←</span>
+                    <span>Back</span>
+                </button>
+                
+                <div class="game-title" id="currentGameTitle">Game Title</div>
+                
+                <div class="game-controls">
+                    <button class="control-btn" onclick="reloadGame()">↻ Reload</button>
+                    <button class="control-btn" onclick="fullscreenGame()">⛶ Fullscreen</button>
+                    <button class="control-btn" onclick="exitFullscreen()">⛶ Exit</button>
+                </div>
+            </div>
+            
+            <div class="game-frame-container">
+                <iframe id="gameFrame" src=""></iframe>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading game...</div>
+                    <div style="position:absolute;bottom:10px;right:10px;font-size:12px;opacity:0.7;color:#fff;z-index:5;">
+                        Press ESC to exit fullscreen
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+// Create animated particles
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    const particleCount = 50;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+// Game Database
+const games = [
+    {
+        id: 1,
+        name: 'Flappy Bird',
+        icon: '',
+        description: 'Test your reaction speed',
+        category: 'Single Player',
+        path: 'games/flappybird.html',
+        image: 'icon/flappybird.jpeg'
+    },
+    {
+        id: 2,
+        name: 'Chess',
+        icon: '',
+        description: 'Strategic board game for two players',
+        category: '2 Players',
+        path: 'games/chess.html',
+        image: 'icon/chess.jpg'
+    },
+    {
+        id: 3,
+        name: 'Type Test',
+        icon: '⌨',
+        description: 'Strategic board game for two players',
+        category: 'single player',
+        path: 'games/typetest.html',
+        image: 'icon/type.jpeg'
+    },
+    {
+        id:4,
+        name: 'Sudoku',
+        icon: '',
+        description: 'Classic dice game with friends',
+        category: 'single Players',
+        path: 'games/sudoku.html',
+        image: 'icon/s2.jpeg'
+    },
+    {
+        id: 5,
+        name: 'Ludo',
+        icon: '',
+        description: 'Classic dice game with friends',
+        category: '2-4 Players',
+        path: 'games/ludo.html',
+        image: 'https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=400'
+    },
+,
+    {
+        id: 6,
+        name: 'Math Quiz',
+        icon: 'MATH',
+        description: 'Quick strategic thinking game',
+        category: '2 Players',
+        path: 'games/mathquiz.html',
+        image: 'icon/math.avif'
+    },
+
+    {
+        id: 7,
+        name: 'Tic Tac Toe',
+        icon: '',
+        description: 'Quick strategic thinking game',
+        category: '2 Players',
+        path: 'games/tic-tac-toe.html',
+        image: 'icon/tictactoe.jpg'
+    },
+    {
+        id: 8,
+        name: 'Run Maze',
+        icon: '',
+        description: 'Navigate through challenging mazes',
+        category: 'Single Player',
+        path: 'games/runmaze.html',
+        image: 'icon/maze.jpg'
+    },
+    {
+        id: 9,
+        name: 'Snake Game',
+        icon: '',
+        description: 'Classic arcade snake game',
+        category: 'Single Player',
+        path: 'games/snake.html',
+        image: 'icon/snake.jpg'
+    },
+    {
+        id: 10,
+        name: 'Reflex Rush',
+        icon: '',
+        description: 'Test your reaction speed',
+        category: 'Single Player',
+        path: 'games/reflex.html',
+        image: 'icon/reflex.jpeg'
+    },
+    {
+        id: 11,
+        name: 'Rock Paper Scissors',
+        icon: '',
+        description: 'Test your reaction speed',
+        category: 'Single Player',
+        path: 'games/rockpaperscissor.html',
+        image: 'icon/rockpaperscissor.jpeg'
+    },
+ {
+        id: 12,
+        name: 'Coin Toss',
+        icon: '',
+        description: 'Test your Luck',
+        category: 'Single Player',
+        path: 'games/coin.html',
+        image: 'icon/coin.jpg'
+    },
+ {
+        id: 13,
+        name: 'Cross Words',
+        icon: '',
+        description: 'Test your Mind',
+        category: 'Single Player',
+        path: 'games/crossword.html',
+        image: 'icon/crossword.jpeg'
+    },
+
+ {
+        id: 14,
+        name: '2048 GAME',
+        icon: '',
+        description: 'Test your Mind',
+        category: 'Single Player',
+        path: 'games/2048.html',
+        image: 'icon/2048.jpeg'
+    },
+    {
+        id: 15,
+        name: 'Bubble Shooter',
+        icon: '0',
+        description: 'crush your balls',
+        category: 'Single Player',
+        path: 'games/bubbleshooter.html',
+        image: 'icon/bubblesshoot.jpeg'
+    },
+{
+        id: 16,
+        name: 'Pac Man',
+        icon: '',
+        description: 'Test your Gamer',
+        category: 'Single Player',
+        path: 'games/pacman.html',
+        image: 'icon/pacman.avif'
+    },{
+        id: 17,
+        name: 'Simon Say',
+        icon: '',
+        description: 'How long you remember',
+        category: 'Single Player',
+        path: 'games/simonsay.html',
+        image: 'icon/simon.jpeg'
+    },{
+        id: 18,
+        name: 'Brick Breaker',
+        icon: '',
+        description: 'How long you break',
+        category: 'Single Player',
+        path: 'games/brickbreaker.html',
+        image: 'icon/brickbreaker.png'
+    },
+{
+        id: 19,
+        name: 'Pong Game',
+        icon: '',
+        description: 'How long you Play',
+        category: 'Single Player',
+        path: 'games/pong.html',
+        image: 'icon/pong.jpeg'
+    },{
+        id: 20,
+        name: 'Fruit Crash',
+        icon: '',
+        description: 'Crush the Fruits',
+        category: 'Single Player',
+        path: 'games/fruitcrush.html',
+        image: 'icon/fruits.jpeg'
+    },{
+        id: 21,
+        name: 'Maze Solver',
+        icon: '',
+        description: 'How long you remember',
+        category: 'Single Player',
+        path: 'games/mazesolver.html',
+        image: 'icon/runmaze.jpeg'
+    },{
+        id: 22,
+        name: 'Whack A Mole',
+        icon: '',
+        description: 'whack him with your strength ',
+        category: 'Single Player',
+        path: 'games/WhackAMole.html',
+        image: 'icon/whackamole.jpeg'
+    }
+];
+
+let currentGamePath = '';
+
+// Initialize
+function init() {
+    createParticles();
+    document.getElementById('landingView').style.display = 'flex';
+    document.getElementById('welcomeView').style.display = 'none';
+    document.getElementById('gameView').style.display = 'none';
+}
+
+// Show welcome screen with games
+function showWelcome() {
+    document.getElementById('landingView').style.display = 'none';
+    document.getElementById('welcomeView').style.display = 'block';
+    document.getElementById('gameView').style.display = 'none';
+    document.getElementById('searchContainer').style.display = 'block';
+    populateGames();
+    setupSearch();
+}
+
+// Handle logo click
+function handleLogoClick() {
+    document.getElementById('landingView').style.display = 'flex';
+    document.getElementById('welcomeView').style.display = 'none';
+    document.getElementById('gameView').style.display = 'none';
+    document.getElementById('searchContainer').style.display = 'none';
+}
+
+// Populate games grid
+function populateGames() {
+    const grid = document.getElementById('gamesGrid');
+    grid.innerHTML = '';
+    
+    games.forEach((game, index) => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.onclick = () => loadGame(game);
+        
+        card.innerHTML = `
+            <div class="game-thumbnail">
+                <img src="${game.image}" alt="${game.name}">
+                <span class="game-thumbnail-icon">${game.icon}</span>
+            </div>
+            <div class="game-info">
+                <div class="game-name">${game.name}</div>
+                <div class="game-description">${game.description}</div>
+                <div class="game-meta">
+                    <span class="game-tag">${game.category}</span>
+                    <span>▶ Play Now</span>
+                </div>
+            </div>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+// Setup search functionality
+function setupSearch() {
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.game-card');
+        
+        cards.forEach(card => {
+            const name = card.querySelector('.game-name').textContent.toLowerCase();
+            const desc = card.querySelector('.game-description').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || desc.includes(searchTerm)) {
+                card.style.display = 'block';
+                card.style.animation = 'fadeIn 0.3s ease';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Load game
+function loadGame(game) {
+    const welcomeView = document.getElementById('welcomeView');
+    const gameView = document.getElementById('gameView');
+    const iframe = document.getElementById('gameFrame');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const gameTitle = document.getElementById('currentGameTitle');
+    
+    gameTitle.textContent = game.name;
+    currentGamePath = game.path;
+    
+    loadingOverlay.classList.remove('hidden');
+    
+    welcomeView.style.display = 'none';
+    gameView.style.display = 'block';
+    
+    iframe.src = game.path;
+    
+    setTimeout(() => {
+        loadingOverlay.classList.add('hidden');
+    }, 1000);
+}
+
+// Reload game
+function reloadGame() {
+    if (currentGamePath) {
+        const iframe = document.getElementById('gameFrame');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        loadingOverlay.classList.remove('hidden');
+        iframe.src = currentGamePath;
+        
+        setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+        }, 800);
+    }
+}
+
+// Exit fullscreen
+function exitFullscreen() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else if (document.webkitFullscreenElement) {
+        document.webkitExitFullscreen();
+    } else if (document.msFullscreenElement) {
+        document.msExitFullscreen();
+    }
+}
+
+// ESC key support
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.fullscreenElement) {
+        exitFullscreen();
+    }
+});
+
+// Fullscreen game
+function fullscreenGame() {
+    const container = document.querySelector('.game-container');
+    if (container.requestFullscreen) {
+        container.requestFullscreen();
+    } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+    } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+    }
+}
+
+// Initialize on load
+init();
+</script>
+
+</body>
+</html>

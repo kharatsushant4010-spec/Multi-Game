@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Pong Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Blurred background image */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("images/pong.jpeg")
+                center / cover no-repeat;
+    filter: blur(12px);
+    transform: scale(1.1); /* avoids edge blur gaps */
+    z-index: -2;
+}
+
+/* Dark overlay for readability */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: -1;
+}
+	
+
+        #gameContainer {
+            text-align: center;
+        }
+
+        #gameCanvas {
+            border: 3px solid #0f0;
+            background: url("images/pong.jpeg");
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        #ui {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 800px;
+            padding: 0 20px;
+        }
+
+        .score {
+            font-size: 24px;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .info {
+            font-size: 16px;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 3px solid #0f0;
+            box-shadow: 0 0 30px #0f0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #0f0;
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #0f0, 0 0 20px #0f0; }
+            to { text-shadow: 0 0 20px #0f0, 0 0 30px #0f0, 0 0 40px #0f0; }
+        }
+
+        button {
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div class="score">Player: <span id="playerScore">0</span></div>
+            <div class="info">Level: <span id="level">1</span> | Speed: <span id="speed">1.0x</span></div>
+            <div class="score">AI: <span id="aiScore">0</span></div>
+        </div>
+
+        <div id="startScreen">
+            <h1>PONG</h1>
+            <p style="margin-bottom: 20px;">Classic Arcade Game</p>
+            <button onclick="startGame()">START GAME</button>
+            <div class="controls">
+                <p><strong>Controls:</strong></p>
+                <p>W / Arrow Up - Move Up</p>
+                <p>S / Arrow Down - Move Down</p>
+                <p>First to 10 points wins!</p>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="hidden">
+            <h1 id="winnerText">YOU WIN!</h1>
+            <p style="margin: 20px 0; font-size: 20px;">Final Score: <span id="finalScore"></span></p>
+            <button onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // GAME CONFIGURATION AND SETUP
+        // ========================================
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state variables
+        let gameRunning = false;
+        let animationFrameId = null; // Track animation frame for proper cleanup
+        let level = 1;
+        let playerScore = 0;
+        let aiScore = 0;
+
+        // Paddle configuration
+        const PADDLE_WIDTH = 10;
+        const PADDLE_HEIGHT = 80;
+        const PADDLE_SPEED = 6;
+
+        // Ball configuration
+        const BALL_RADIUS = 8;
+        const BALL_BASE_SPEED = 4;
+
+        // Player paddle object
+        const player = {
+            x: 20,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
+            dy: 0 // Current velocity
+        };
+
+        // AI paddle object
+        const ai = {
+            x: canvas.width - 30,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
+            baseSpeed: 3 // Base AI speed
+        };
+
+        // Ball object
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: BALL_RADIUS,
+            dx: BALL_BASE_SPEED, // X velocity
+            dy: BALL_BASE_SPEED, // Y velocity
+            speedMultiplier: 1 // Increases with level
+        };
+
+        // Particle system for visual effects
+        const particles = [];
+
+        // Input tracking
+        const keys = {};
+
+        // ========================================
+        // INPUT HANDLING
+        // ========================================
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // ========================================
+        // PARTICLE SYSTEM (Visual Effects)
+        // ========================================
+        
+        function createParticles(x, y) {
+            // Create 10 particles at collision point
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    dx: (Math.random() - 0.5) * 4, // Random X velocity
+                    dy: (Math.random() - 0.5) * 4, // Random Y velocity
+                    life: 30 // Particle lifetime in frames
+                });
+            }
+        }
+
+        function updateParticles() {
+            // Update all particles and remove dead ones
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.dx;
+                p.y += p.dy;
+                p.life--;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                // Fade out particles as they die
+                ctx.fillStyle = `rgba(0, 255, 0, ${p.life / 30})`;
+                ctx.fillRect(p.x, p.y, 3, 3);
+            });
+        }
+
+        // ========================================
+        // DRAWING FUNCTIONS
+        // ========================================
+        
+        function drawRect(x, y, w, h) {
+            // Draw rectangle with border
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = '#0a0';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, w, h);
+        }
+
+        function drawBall(x, y, radius) {
+            // Draw ball with border
+            ctx.fillStyle = '#0f0';
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0a0';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawNet() {
+            // Draw center line (dashed)
+            ctx.strokeStyle = '#0f0';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+        }
+
+        function draw() {
+            // Clear entire canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw game elements
+            drawNet();
+            drawRect(player.x, player.y, player.width, player.height);
+            drawRect(ai.x, ai.y, ai.width, ai.height);
+            drawBall(ball.x, ball.y, ball.radius);
+            drawParticles();
+        }
+
+        // ========================================
+        // PLAYER UPDATE LOGIC
+        // ========================================
+        
+        function updatePlayer() {
+            // Check input and set velocity
+            if (keys['w'] || keys['W'] || keys['ArrowUp']) {
+                player.dy = -PADDLE_SPEED;
+            } else if (keys['s'] || keys['S'] || keys['ArrowDown']) {
+                player.dy = PADDLE_SPEED;
+            } else {
+                player.dy = 0; // Stop moving if no key pressed
+            }
+
+            // Update position
+            player.y += player.dy;
+
+            // Keep paddle within canvas bounds
+            if (player.y < 0) {
+                player.y = 0;
+            }
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+            }
+        }
+
+        // ========================================
+        // AI UPDATE LOGIC
+        // ========================================
+        
+        function updateAI() {
+            // AI gets harder with each level
+            const aiSpeed = ai.baseSpeed + (level - 1) * 0.5;
+            
+            // Calculate center of AI paddle
+            const aiCenter = ai.y + ai.height / 2;
+            
+            // Move towards ball with dead zone for smooth movement
+            if (ball.y < aiCenter - 20) {
+                ai.y -= aiSpeed;
+            } else if (ball.y > aiCenter + 20) {
+                ai.y += aiSpeed;
+            }
+
+            // Keep AI paddle within canvas bounds
+            if (ai.y < 0) {
+                ai.y = 0;
+            }
+            if (ai.y + ai.height > canvas.height) {
+                ai.y = canvas.height - ai.height;
+            }
+        }
+
+        // ========================================
+        // BALL UPDATE LOGIC
+        // ========================================
+        
+        function updateBall() {
+            // Move ball based on velocity and speed multiplier
+            ball.x += ball.dx * ball.speedMultiplier;
+            ball.y += ball.dy * ball.speedMultiplier;
+
+            // ---- Top and Bottom Wall Collision ----
+            if (ball.y - ball.radius <= 0) {
+                // Hit top wall
+                ball.y = ball.radius; // Prevent sticking
+                ball.dy = Math.abs(ball.dy); // Bounce down
+                createParticles(ball.x, ball.y);
+            } else if (ball.y + ball.radius >= canvas.height) {
+                // Hit bottom wall
+                ball.y = canvas.height - ball.radius; // Prevent sticking
+                ball.dy = -Math.abs(ball.dy); // Bounce up
+                createParticles(ball.x, ball.y);
+            }
+
+            // ---- Player Paddle Collision ----
+            if (ball.dx < 0) { // Only check if ball is moving left
+                if (ball.x - ball.radius <= player.x + player.width &&
+                    ball.x - ball.radius > player.x &&
+                    ball.y >= player.y &&
+                    ball.y <= player.y + player.height) {
+                    
+                    // Ball hit player paddle
+                    ball.x = player.x + player.width + ball.radius; // Prevent sticking
+                    ball.dx = Math.abs(ball.dx); // Reverse X direction (move right)
+                    
+                    // Add spin based on where ball hits paddle
+                    const hitPosition = (ball.y - player.y) / player.height; // 0 to 1
+                    ball.dy = (hitPosition - 0.5) * 10; // -5 to +5
+                    
+                    createParticles(ball.x, ball.y);
+                }
+            }
+
+            // ---- AI Paddle Collision ----
+            if (ball.dx > 0) { // Only check if ball is moving right
+                if (ball.x + ball.radius >= ai.x &&
+                    ball.x + ball.radius < ai.x + ai.width &&
+                    ball.y >= ai.y &&
+                    ball.y <= ai.y + ai.height) {
+                    
+                    // Ball hit AI paddle
+                    ball.x = ai.x - ball.radius; // Prevent sticking
+                    ball.dx = -Math.abs(ball.dx); // Reverse X direction (move left)
+                    
+                    // Add spin based on where ball hits paddle
+                    const hitPosition = (ball.y - ai.y) / ai.height; // 0 to 1
+                    ball.dy = (hitPosition - 0.5) * 10; // -5 to +5
+                    
+                    createParticles(ball.x, ball.y);
+                }
+            }
+
+            // ---- Scoring (Ball went off screen) ----
+            if (ball.x - ball.radius < 0) {
+                // Player missed - AI scores
+                aiScore++;
+                updateScore();
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                // AI missed - Player scores
+                playerScore++;
+                updateScore();
+                checkLevelUp();
+                resetBall();
+            }
+
+            // ---- Check for Game Over ----
+            if (playerScore >= 10 || aiScore >= 10) {
+                endGame();
+            }
+        }
+
+        // ========================================
+        // BALL RESET LOGIC
+        // ========================================
+        
+        function resetBall() {
+            // Reset ball to center
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            
+            // Random direction (left or right)
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            ball.dx = direction * BALL_BASE_SPEED;
+            
+            // Random vertical angle
+            ball.dy = (Math.random() - 0.5) * 8;
+        }
+
+        // ========================================
+        // LEVEL AND SCORING LOGIC
+        // ========================================
+        
+        function checkLevelUp() {
+            // Level up every 3 points (max level 5)
+            const newLevel = Math.floor(playerScore / 3) + 1;
+            
+            if (newLevel > level && newLevel <= 5) {
+                level = newLevel;
+                
+                // Increase ball speed by 20% per level
+                ball.speedMultiplier = 1 + (level - 1) * 0.2;
+                
+                updateUI();
+                createParticles(canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('aiScore').textContent = aiScore;
+        }
+
+        function updateUI() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('speed').textContent = ball.speedMultiplier.toFixed(1) + 'x';
+        }
+
+        // ========================================
+        // MAIN GAME LOOP
+        // ========================================
+        
+        function gameLoop() {
+            if (!gameRunning) {
+                return; // Stop loop if game is not running
+            }
+
+            // Update game state
+            updatePlayer();
+            updateAI();
+            updateBall();
+            updateParticles();
+            
+            // Draw everything
+            draw();
+
+            // Continue loop
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // ========================================
+        // GAME STATE MANAGEMENT
+        // ========================================
+        
+        function startGame() {
+            // Hide start screen
+            document.getElementById('startScreen').classList.add('hidden');
+            
+            // Reset game state
+            gameRunning = true;
+            resetGame();
+            
+            // Start game loop
+            gameLoop();
+        }
+
+        function resetGame() {
+            // Reset all game variables
+            playerScore = 0;
+            aiScore = 0;
+            level = 1;
+            ball.speedMultiplier = 1;
+            particles.length = 0; // Clear particles
+            
+            // Update UI
+            updateScore();
+            updateUI();
+            
+            // Reset positions
+            resetBall();
+            player.y = canvas.height / 2 - PADDLE_HEIGHT / 2;
+            ai.y = canvas.height / 2 - PADDLE_HEIGHT / 2;
+        }
+
+        function endGame() {
+            // Stop game loop
+            gameRunning = false;
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            // Show game over screen
+            const winner = playerScore >= 10 ? 'YOU WIN!' : 'AI WINS!';
+            document.getElementById('winnerText').textContent = winner;
+            document.getElementById('finalScore').textContent = `${playerScore} - ${aiScore}`;
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+
+        function restartGame() {
+            // Hide game over screen
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            
+            // Start new game
+            startGame();
+        }
+
+        // ========================================
+        // INITIAL SETUP
+        // ========================================
+        
+        // Draw initial state (empty court)
+        draw();
+    </script>
+</body>
+</html>

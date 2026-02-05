@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic 3D Runner Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #score {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 40px 60px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            pointer-events: all;
+            border: 3px solid #4CAF50;
+            backdrop-filter: blur(10px);
+        }
+
+        #gameOver h2 {
+            margin-bottom: 20px;
+            font-size: 42px;
+            color: #4CAF50;
+        }
+
+        #gameOver p {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #restartBtn {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        #restartBtn:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: scale(1.05);
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 15px 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div id="score">Score: 0</div>
+        <div id="instructions">
+            ← → Arrow Keys: Move | Space: Jump
+        </div>
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button id="restartBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, player;
+        let obstacles = [];
+        let coins = [];
+        let roadSegments = [];
+        let trees = [];
+        let score = 0;
+        let gameRunning = true;
+        let isJumping = false;
+        let jumpVelocity = 0;
+        let playerLane = 0;
+        let gameSpeed = 0.3;
+        let playerZ = 0;
+        let animationTime = 0;
+        let legRotation = 0;
+        let armRotation = 0;
+
+        const scoreDisplay = document.getElementById('score');
+        const gameOverDiv = document.getElementById('gameOver');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        function init() {
+            scene = new THREE.Scene();
+            
+            // Realistic sky gradient
+            scene.fog = new THREE.Fog(0xadd8e6, 30, 100);
+            scene.background = new THREE.Color(0x87CEEB);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('gameCanvas'), 
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Realistic lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xfff4e6, 1.2);
+            directionalLight.position.set(15, 30, 20);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -30;
+            directionalLight.shadow.camera.right = 30;
+            directionalLight.shadow.camera.top = 30;
+            directionalLight.shadow.camera.bottom = -30;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Hemisphere light for realistic outdoor lighting
+            const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x4a7c59, 0.6);
+            scene.add(hemiLight);
+
+            createInitialRoad();
+            createPlayer();
+
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+        }
+
+        function createRoadSegment(zPos) {
+            const segment = new THREE.Group();
+
+            // Grass ground with texture-like appearance
+            const groundGeometry = new THREE.PlaneGeometry(30, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x3a5f3a,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            segment.add(ground);
+
+            // Asphalt road with realistic material
+            const roadGeometry = new THREE.PlaneGeometry(6.5, 20);
+            const roadMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a2a2a,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const road = new THREE.Mesh(roadGeometry, roadMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = 0.01;
+            road.receiveShadow = true;
+            segment.add(road);
+
+            // Road edges
+            const edgeGeometry = new THREE.BoxGeometry(0.3, 0.15, 20);
+            const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+            
+            const leftEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            leftEdge.position.set(-3.4, 0.05, 0);
+            segment.add(leftEdge);
+
+            const rightEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            rightEdge.position.set(3.4, 0.05, 0);
+            segment.add(rightEdge);
+
+            // Lane dividers
+            for (let i = 0; i < 5; i++) {
+                const dividerGeometry = new THREE.BoxGeometry(0.15, 0.05, 2);
+                const dividerMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xffff00,
+                    emissive: 0xaaaa00,
+                    emissiveIntensity: 0.3
+                });
+                
+                const leftDivider = new THREE.Mesh(dividerGeometry, dividerMaterial);
+                leftDivider.position.set(-2, 0.02, -8 + i * 4);
+                segment.add(leftDivider);
+
+                const rightDivider = new THREE.Mesh(dividerGeometry, dividerMaterial);
+                rightDivider.position.set(2, 0.02, -8 + i * 4);
+                segment.add(rightDivider);
+            }
+
+            // Add trees on sides
+            if (Math.random() > 0.5) {
+                const tree = createTree();
+                tree.position.set(-8 - Math.random() * 3, 0, Math.random() * 20 - 10);
+                segment.add(tree);
+            }
+
+            if (Math.random() > 0.5) {
+                const tree = createTree();
+                tree.position.set(8 + Math.random() * 3, 0, Math.random() * 20 - 10);
+                segment.add(tree);
+            }
+
+            segment.position.z = zPos;
+            scene.add(segment);
+            roadSegments.push(segment);
+        }
+
+        function createTree() {
+            const tree = new THREE.Group();
+
+            // Trunk
+            const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 3, 8);
+            const trunkMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x4a3728,
+                roughness: 0.9
+            });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 1.5;
+            trunk.castShadow = true;
+            tree.add(trunk);
+
+            // Foliage
+            const foliageGeometry = new THREE.SphereGeometry(1.5, 8, 8);
+            const foliageMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2d5016,
+                roughness: 0.8
+            });
+            const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+            foliage.position.y = 3.5;
+            foliage.castShadow = true;
+            tree.add(foliage);
+
+            return tree;
+        }
+
+        function createInitialRoad() {
+            for (let i = 0; i < 5; i++) {
+                createRoadSegment(-i * 20);
+            }
+        }
+
+        function createPlayer() {
+            player = new THREE.Group();
+
+            // Torso - more realistic proportions
+            const torsoGeometry = new THREE.BoxGeometry(0.8, 1.0, 0.5);
+            const torsoMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1e88e5,
+                roughness: 0.6,
+                metalness: 0.1
+            });
+            const torso = new THREE.Mesh(torsoGeometry, torsoMaterial);
+            torso.position.y = 1.5;
+            torso.castShadow = true;
+            player.add(torso);
+
+            // Head - more detailed
+            const headGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+            const headMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffdbac,
+                roughness: 0.5
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.4;
+            head.castShadow = true;
+            player.add(head);
+
+            // Hair
+            const hairGeometry = new THREE.SphereGeometry(0.37, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const hairMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2c1810,
+                roughness: 0.8
+            });
+            const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+            hair.position.y = 2.55;
+            hair.castShadow = true;
+            player.add(hair);
+
+            // Legs - more realistic
+            const legGeometry = new THREE.CylinderGeometry(0.15, 0.18, 1.0, 8);
+            const legMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1565c0,
+                roughness: 0.7
+            });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.25, 0.5, 0);
+            leftLeg.castShadow = true;
+            player.leftLeg = leftLeg;
+            player.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.25, 0.5, 0);
+            rightLeg.castShadow = true;
+            player.rightLeg = rightLeg;
+            player.add(rightLeg);
+
+            // Shoes
+            const shoeGeometry = new THREE.BoxGeometry(0.22, 0.15, 0.35);
+            const shoeMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a1a,
+                roughness: 0.4
+            });
+            
+            const leftShoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
+            leftShoe.position.set(-0.25, 0.08, 0.05);
+            leftShoe.castShadow = true;
+            player.leftShoe = leftShoe;
+            player.add(leftShoe);
+
+            const rightShoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
+            rightShoe.position.set(0.25, 0.08, 0.05);
+            rightShoe.castShadow = true;
+            player.rightShoe = rightShoe;
+            player.add(rightShoe);
+
+            // Arms - more realistic
+            const armGeometry = new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8);
+            const armMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1e88e5,
+                roughness: 0.6
+            });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.55, 1.6, 0);
+            leftArm.castShadow = true;
+            player.leftArm = leftArm;
+            player.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.55, 1.6, 0);
+            rightArm.castShadow = true;
+            player.rightArm = rightArm;
+            player.add(rightArm);
+
+            // Hands
+            const handGeometry = new THREE.SphereGeometry(0.13, 8, 8);
+            const handMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffdbac,
+                roughness: 0.5
+            });
+            
+            const leftHand = new THREE.Mesh(handGeometry, handMaterial);
+            leftHand.position.set(-0.55, 1.15, 0);
+            leftHand.castShadow = true;
+            player.leftHand = leftHand;
+            player.add(leftHand);
+
+            const rightHand = new THREE.Mesh(handGeometry, handMaterial);
+            rightHand.position.set(0.55, 1.15, 0);
+            rightHand.castShadow = true;
+            player.rightHand = rightHand;
+            player.add(rightHand);
+
+            player.position.set(0, 0, 0);
+            scene.add(player);
+        }
+
+        function animateRunning() {
+            if (!gameRunning || isJumping) return;
+
+            animationTime += 0.15;
+            legRotation = Math.sin(animationTime) * 0.6;
+            armRotation = Math.sin(animationTime) * 0.5;
+
+            // Leg animation
+            player.leftLeg.rotation.x = legRotation;
+            player.rightLeg.rotation.x = -legRotation;
+            player.leftShoe.rotation.x = legRotation;
+            player.rightShoe.rotation.x = -legRotation;
+
+            // Arm animation (opposite to legs)
+            player.leftArm.rotation.x = -armRotation;
+            player.rightArm.rotation.x = armRotation;
+            player.leftHand.rotation.x = -armRotation;
+            player.rightHand.rotation.x = armRotation;
+
+            // Slight body bob
+            player.position.y = Math.abs(Math.sin(animationTime * 2)) * 0.1;
+        }
+
+        function createObstacle() {
+            if (!gameRunning) return;
+
+            const geometry = new THREE.BoxGeometry(1.2, 1.8, 1.2);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xd32f2f,
+                roughness: 0.5,
+                metalness: 0.3,
+                emissive: 0x5d0000,
+                emissiveIntensity: 0.2
+            });
+            const obstacle = new THREE.Mesh(geometry, material);
+            
+            const lanes = [-2, 0, 2];
+            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+            
+            obstacle.position.set(randomLane, 0.9, playerZ - 50);
+            obstacle.castShadow = true;
+            obstacle.receiveShadow = true;
+            obstacle.userData.type = 'obstacle';
+            
+            scene.add(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        function createCoin() {
+            if (!gameRunning) return;
+
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, 0.15, 20);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xffd700,
+                roughness: 0.2,
+                metalness: 0.9,
+                emissive: 0xffaa00,
+                emissiveIntensity: 0.4
+            });
+            const coin = new THREE.Mesh(geometry, material);
+            
+            const lanes = [-2, 0, 2];
+            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+            
+            coin.position.set(randomLane, 1.5, playerZ - 50);
+            coin.rotation.x = Math.PI / 2;
+            coin.castShadow = true;
+            coin.userData.type = 'coin';
+            
+            scene.add(coin);
+            coins.push(coin);
+        }
+
+        function onKeyDown(event) {
+            if (!gameRunning) return;
+
+            if (event.key === 'ArrowLeft' && playerLane > -1) {
+                playerLane--;
+                player.position.x = playerLane * 2;
+            } else if (event.key === 'ArrowRight' && playerLane < 1) {
+                playerLane++;
+                player.position.x = playerLane * 2;
+            } else if (event.key === ' ' && !isJumping) {
+                event.preventDefault();
+                isJumping = true;
+                jumpVelocity = 0.28;
+            }
+        }
+
+        function checkCollisions() {
+            const playerBox = new THREE.Box3().setFromObject(player);
+
+            obstacles.forEach((obstacle, index) => {
+                const obstacleBox = new THREE.Box3().setFromObject(obstacle);
+                
+                if (playerBox.intersectsBox(obstacleBox) && player.position.y < 0.5) {
+                    endGame();
+                }
+
+                if (obstacle.position.z > playerZ + 10) {
+                    scene.remove(obstacle);
+                    obstacles.splice(index, 1);
+                }
+            });
+
+            coins.forEach((coin, index) => {
+                const coinBox = new THREE.Box3().setFromObject(coin);
+                
+                if (playerBox.intersectsBox(coinBox)) {
+                    score += 10;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    scene.remove(coin);
+                    coins.splice(index, 1);
+                }
+
+                if (coin.position.z > playerZ + 10) {
+                    scene.remove(coin);
+                    coins.splice(index, 1);
+                }
+            });
+        }
+
+        function updateRoad() {
+            roadSegments.forEach((segment, index) => {
+                if (segment.position.z > playerZ + 20) {
+                    scene.remove(segment);
+                    roadSegments.splice(index, 1);
+                }
+            });
+
+            if (roadSegments.length < 6) {
+                const lastSegment = roadSegments[roadSegments.length - 1];
+                createRoadSegment(lastSegment.position.z - 20);
+            }
+        }
+
+        function endGame() {
+            gameRunning = false;
+            finalScoreDisplay.textContent = score;
+            gameOverDiv.style.display = 'block';
+        }
+
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            playerLane = 0;
+            isJumping = false;
+            jumpVelocity = 0;
+            playerZ = 0;
+            animationTime = 0;
+            
+            player.position.set(0, 0, 0);
+            scoreDisplay.textContent = 'Score: 0';
+            gameOverDiv.style.display = 'none';
+            
+            obstacles.forEach(obs => scene.remove(obs));
+            coins.forEach(coin => scene.remove(coin));
+            obstacles = [];
+            coins = [];
+
+            roadSegments.forEach(seg => scene.remove(seg));
+            roadSegments = [];
+            createInitialRoad();
+        }
+
+        let obstacleTimer = 0;
+        let coinTimer = 0;
+        let scoreTimer = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (gameRunning) {
+                playerZ -= gameSpeed;
+                player.position.z = playerZ;
+
+                camera.position.set(player.position.x, player.position.y + 4, playerZ + 7);
+                camera.lookAt(player.position.x, player.position.y + 1.5, playerZ - 8);
+
+                animateRunning();
+
+                if (isJumping) {
+                    player.position.y += jumpVelocity;
+                    jumpVelocity -= 0.018;
+
+                    if (player.position.y <= 0) {
+                        player.position.y = 0;
+                        isJumping = false;
+                        jumpVelocity = 0;
+                    }
+                }
+
+                updateRoad();
+
+                obstacleTimer++;
+                if (obstacleTimer > 100) {
+                    createObstacle();
+                    obstacleTimer = 0;
+                }
+
+                coinTimer++;
+                if (coinTimer > 150) {
+                    createCoin();
+                    coinTimer = 0;
+                }
+
+                scoreTimer++;
+                if (scoreTimer > 60) {
+                    score += 1;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    scoreTimer = 0;
+                }
+
+                coins.forEach(coin => {
+                    coin.rotation.z += 0.08;
+                });
+
+                checkCollisions();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        restartBtn.addEventListener('click', startGame);
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

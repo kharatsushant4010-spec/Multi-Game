@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Pac-Man Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+    min-height: 100vh;
+    background: url("images/pacman.avif") center/cover no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(14px);
+    background: rgba(0,0,0,0.65);
+    z-index: -1;
+}
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            align-items: flex-start;
+        }
+
+        .game-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #2196F3;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #ffeb3b;
+            text-transform: uppercase;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #gameCanvas {
+            border: 4px solid #2196F3;
+            border-radius: 10px;
+            background: #000;
+            box-shadow: 0 0 30px rgba(33, 150, 243, 0.6);
+        }
+
+        .side-panel {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #2196F3;
+            width: 300px;
+        }
+
+        .side-panel h2 {
+            color: #ffeb3b;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .controls-section {
+            margin-bottom: 25px;
+        }
+
+        .controls-section h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            padding: 8px;
+            background: rgba(33, 150, 243, 0.1);
+            border-radius: 5px;
+        }
+
+        .control-icon {
+            font-size: 20px;
+            min-width: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .instructions {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: #2196F3;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            padding: 5px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .instructions li:before {
+            content: "• ";
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid #ffeb3b;
+            box-shadow: 0 0 50px rgba(255, 235, 59, 0.5);
+        }
+
+        .game-over-content h2 {
+            font-size: 48px;
+            color: #ffeb3b;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+        }
+
+        .game-over-content p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        .level-complete {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .game-status {
+            text-align: center;
+            padding: 10px;
+            background: rgba(33, 150, 243, 0.2);
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .side-panel {
+                width: 100%;
+                max-width: 560px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="game-section">
+            <div class="score-board">
+                <div class="score-item">
+                    <span class="score-label">Score</span>
+                    <span class="score-value" id="score">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Level</span>
+                    <span class="score-value" id="level">1</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Lives</span>
+                    <span class="score-value" id="lives">3</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">High Score</span>
+                    <span class="score-value" id="highScore">0</span>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas" width="560" height="620"></canvas>
+        </div>
+
+        <div class="side-panel">
+            <h2>🎮 GAME CONTROLS</h2>
+            
+            <div class="controls-section">
+                <h3>Movement</h3>
+                <div class="control-item">
+                    <span class="control-icon">⬆️</span>
+                    <span>Arrow Up - Move Up</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">⬇️</span>
+                    <span>Arrow Down - Move Down</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">⬅️</span>
+                    <span>Arrow Left - Move Left</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-icon">➡️</span>
+                    <span>Arrow Right - Move Right</span>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="startBtn" onclick="startGame()">Start Game</button>
+                <button class="btn btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>Pause Game</button>
+                <button class="btn btn-danger" onclick="restartGame()">Restart Game</button>
+            </div>
+
+            <div class="game-status" id="gameStatus">
+                Press START to begin!
+            </div>
+
+            <div class="instructions">
+                <h3>📖 How to Play</h3>
+                <ul>
+                    <li>Collect all the dots to complete the level</li>
+                    <li>Avoid the colorful ghosts</li>
+                    <li>Large dots are power pellets (50 points)</li>
+                    <li>Small dots are worth 10 points</li>
+                    <li>You have 3 lives - don't waste them!</li>
+                    <li>Speed increases with each level</li>
+                    <li>Use precise movements to navigate tight corners</li>
+                </ul>
+            </div>
+
+            <div class="instructions">
+                <h3>👻 Meet the Ghosts</h3>
+                <ul>
+                    <li style="color: #FF0000;">Blinky (Red) - The Chaser</li>
+                    <li style="color: #FFB8FF;">Pinky (Pink) - The Ambusher</li>
+                    <li style="color: #00FFFF;">Inky (Cyan) - The Unpredictable</li>
+                    <li style="color: #FFB852;">Clyde (Orange) - The Random</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over-overlay" id="gameOverlay">
+        <div class="game-over-content" id="gameOverContent">
+            <h2 id="gameOverTitle">GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Level Reached: <span id="finalLevel">1</span></p>
+            <p id="highScoreMsg"></p>
+            <button class="btn btn-primary" onclick="restartGame()" style="margin-top: 20px;">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const CELL = 20;
+        const COLS = 28;
+        const ROWS = 31;
+        
+        // Game state
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let highScore = parseInt(localStorage.getItem('pacmanHighScore')) || 0;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameStarted = false;
+        let dotsRemaining = 0;
+        
+        // Pac-Man
+        let pacman = {
+            x: 14,
+            y: 23,
+            direction: 0,
+            nextDirection: 0,
+            mouthOpen: 0,
+            speed: 0.15,
+            gridX: 14,
+            gridY: 23
+        };
+        
+        // Directions: 0=right, 1=down, 2=left, 3=up
+        const dx = [1, 0, -1, 0];
+        const dy = [0, 1, 0, -1];
+        
+        // Maze (1=wall, 0=dot, 2=empty, 3=power pellet)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+            [1,3,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,3,1],
+            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+            [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,0,1,1,1,1,1,2,1,1,2,1,1,1,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,1,1,1,2,1,1,2,1,1,1,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,2,2,2,2,2,2,2,2,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,1,1,1,2,2,1,1,1,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,1,2,2,2,2,2,2,1,2,1,1,0,1,1,1,1,1,1],
+            [2,2,2,2,2,2,0,2,2,2,1,2,2,2,2,2,2,1,2,2,2,0,2,2,2,2,2,2],
+            [1,1,1,1,1,1,0,1,1,2,1,2,2,2,2,2,2,1,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,2,2,2,2,2,2,2,2,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1],
+            [1,1,1,1,1,1,0,1,1,2,1,1,1,1,1,1,1,1,2,1,1,0,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+            [1,3,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,3,1],
+            [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+            [1,1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,0,1,1,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        
+        // Create a copy for tracking dots
+        let mazeState = maze.map(row => [...row]);
+        
+        // Ghosts
+        const ghosts = [
+            { x: 13.5, y: 11.5, color: '#FF0000', direction: 0, name: 'Blinky', startX: 13.5, startY: 11.5 },
+            { x: 14.5, y: 11.5, color: '#FFB8FF', direction: 2, name: 'Pinky', startX: 14.5, startY: 11.5 },
+            { x: 13.5, y: 14.5, color: '#00FFFF', direction: 3, name: 'Inky', startX: 13.5, startY: 14.5 },
+            { x: 14.5, y: 14.5, color: '#FFB852', direction: 1, name: 'Clyde', startX: 14.5, startY: 14.5 }
+        ];
+        
+        // Count initial dots
+        function countDots() {
+            dotsRemaining = 0;
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (mazeState[y][x] === 0 || mazeState[y][x] === 3) {
+                        dotsRemaining++;
+                    }
+                }
+            }
+        }
+        
+        countDots();
+        
+        // Draw maze
+        function drawMaze() {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const cell = maze[y][x];
+                    const state = mazeState[y][x];
+                    
+                    if (cell === 1) {
+                        // Wall with better styling
+                        ctx.fillStyle = '#2121DE';
+                        ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                        ctx.strokeStyle = '#4848FF';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x * CELL + 0.5, y * CELL + 0.5, CELL - 1, CELL - 1);
+                    } else if (state === 0) {
+                        // Dot
+                        ctx.fillStyle = '#FFB8AE';
+                        ctx.beginPath();
+                        ctx.arc(x * CELL + CELL/2, y * CELL + CELL/2, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (state === 3) {
+                        // Power pellet with pulsing effect
+                        const pulse = Math.sin(Date.now() / 200) * 0.5 + 0.5;
+                        ctx.fillStyle = `rgba(255, 184, 174, ${0.7 + pulse * 0.3})`;
+                        ctx.beginPath();
+                        ctx.arc(x * CELL + CELL/2, y * CELL + CELL/2, 4 + pulse, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+        
+        // Draw Pac-Man with smooth animation
+        function drawPacman() {
+            const px = pacman.x * CELL + CELL/2;
+            const py = pacman.y * CELL + CELL/2;
+            
+            ctx.fillStyle = '#FFFF00';
+            ctx.beginPath();
+            
+            const mouthAngle = Math.sin(pacman.mouthOpen) * 0.4;
+            const startAngle = (pacman.direction * Math.PI / 2) + mouthAngle;
+            const endAngle = (pacman.direction * Math.PI / 2) + Math.PI * 2 - mouthAngle;
+            
+            ctx.arc(px, py, CELL/2 - 1, startAngle, endAngle);
+            ctx.lineTo(px, py);
+            ctx.fill();
+            
+            pacman.mouthOpen += 0.15;
+        }
+        
+        // Draw ghosts with better graphics
+        function drawGhosts() {
+            ghosts.forEach(ghost => {
+                const gx = ghost.x * CELL + CELL/2;
+                const gy = ghost.y * CELL + CELL/2;
+                
+                // Body
+                ctx.fillStyle = ghost.color;
+                ctx.beginPath();
+                ctx.arc(gx, gy - 3, CELL/2 - 1, Math.PI, 0, false);
+                ctx.lineTo(gx + CELL/2 - 1, gy + CELL/2 - 1);
+                
+                // Wavy bottom
+                for (let i = 0; i < 3; i++) {
+                    ctx.lineTo(gx + CELL/2 - 1 - (i + 0.5) * (CELL - 2) / 3, gy + CELL/2 - 4);
+                    ctx.lineTo(gx + CELL/2 - 1 - (i + 1) * (CELL - 2) / 3, gy + CELL/2 - 1);
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = '#FFF';
+                ctx.beginPath();
+                ctx.arc(gx - 4, gy - 3, 3.5, 0, Math.PI * 2);
+                ctx.arc(gx + 4, gy - 3, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Pupils
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(gx - 4 + dx[ghost.direction] * 1.5, gy - 3 + dy[ghost.direction] * 1.5, 2, 0, Math.PI * 2);
+                ctx.arc(gx + 4 + dx[ghost.direction] * 1.5, gy - 3 + dy[ghost.direction] * 1.5, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Improved collision detection - checks if center of entity is in a wall
+        function canMove(x, y) {
+            const gridX = Math.round(x);
+            const gridY = Math.round(y);
+            
+            if (gridX < 0 || gridX >= COLS || gridY < 0 || gridY >= ROWS) return false;
+            if (maze[gridY][gridX] === 1) return false;
+            
+            // Check if close enough to center of cell for precise movement
+            const centerX = Math.round(x);
+            const centerY = Math.round(y);
+            const distFromCenterX = Math.abs(x - centerX);
+            const distFromCenterY = Math.abs(y - centerY);
+            
+            // Additional corner checks
+            if (distFromCenterX > 0.4 || distFromCenterY > 0.4) {
+                const checkX = x > centerX ? Math.ceil(x) : Math.floor(x);
+                const checkY = y > centerY ? Math.ceil(y) : Math.floor(y);
+                
+                if (checkX >= 0 && checkX < COLS && checkY >= 0 && checkY < ROWS) {
+                    if (maze[checkY][checkX] === 1) return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Update Pac-Man position with improved movement
+        function updatePacman() {
+            // Try to change direction when aligned with grid
+            const alignedX = Math.abs(pacman.x - Math.round(pacman.x)) < 0.1;
+            const alignedY = Math.abs(pacman.y - Math.round(pacman.y)) < 0.1;
+            
+            if ((alignedX && (pacman.nextDirection === 1 || pacman.nextDirection === 3)) ||
+                (alignedY && (pacman.nextDirection === 0 || pacman.nextDirection === 2))) {
+                
+                const nextX = pacman.x + dx[pacman.nextDirection] * pacman.speed;
+                const nextY = pacman.y + dy[pacman.nextDirection] * pacman.speed;
+                
+                if (canMove(nextX, nextY)) {
+                    pacman.direction = pacman.nextDirection;
+                    // Align to grid when changing direction
+                    if (pacman.nextDirection === 1 || pacman.nextDirection === 3) {
+                        pacman.x = Math.round(pacman.x);
+                    } else {
+                        pacman.y = Math.round(pacman.y);
+                    }
+                }
+            }
+            
+            // Move in current direction
+            const newX = pacman.x + dx[pacman.direction] * pacman.speed;
+            const newY = pacman.y + dy[pacman.direction] * pacman.speed;
+            
+            if (canMove(newX, newY)) {
+                pacman.x = newX;
+                pacman.y = newY;
+                
+                // Wrap around tunnel
+                if (pacman.x < 0) pacman.x = COLS - 0.5;
+                if (pacman.x >= COLS) pacman.x = 0.5;
+                
+                // Collect dots when centered on cell
+                const gridX = Math.round(pacman.x);
+                const gridY = Math.round(pacman.y);
+                
+                if (Math.abs(pacman.x - gridX) < 0.3 && Math.abs(pacman.y - gridY) < 0.3) {
+                    if (mazeState[gridY][gridX] === 0) {
+                        score += 10;
+                        mazeState[gridY][gridX] = 2;
+                        dotsRemaining--;
+                    } else if (mazeState[gridY][gridX] === 3) {
+                        score += 50;
+                        mazeState[gridY][gridX] = 2;
+                        dotsRemaining--;
+                    }
+                    
+                    updateScore();
+                    
+                    // Check win condition
+                    if (dotsRemaining === 0) {
+                        levelComplete();
+                    }
+                }
+            }
+        }
+        
+        // Update ghosts with improved AI
+        function updateGhosts() {
+            ghosts.forEach(ghost => {
+                // Check for direction change at intersections
+                const gridX = Math.round(ghost.x);
+                const gridY = Math.round(ghost.y);
+                const alignedX = Math.abs(ghost.x - gridX) < 0.1;
+                const alignedY = Math.abs(ghost.y - gridY) < 0.1;
+                
+                if (alignedX && alignedY && Math.random() < 0.05) {
+                    const possibleDirs = [];
+                    for (let d = 0; d < 4; d++) {
+                        if (d === (ghost.direction + 2) % 4) continue; // Don't reverse
+                        const testX = gridX + dx[d];
+                        const testY = gridY + dy[d];
+                        if (testX >= 0 && testX < COLS && testY >= 0 && testY < ROWS && maze[testY][testX] !== 1) {
+                            possibleDirs.push(d);
+                        }
+                    }
+                    if (possibleDirs.length > 0) {
+                        ghost.direction = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+                        ghost.x = gridX;
+                        ghost.y = gridY;
+                    }
+                }
+                
+                const speed = 0.08 * (1 + level * 0.05);
+                const newX = ghost.x + dx[ghost.direction] * speed;
+                const newY = ghost.y + dy[ghost.direction] * speed;
+                
+                if (canMove(newX, newY)) {
+                    ghost.x = newX;
+                    ghost.y = newY;
+                    
+                    // Wrap around tunnel
+                    if (ghost.x < 0) ghost.x = COLS - 0.5;
+                    if (ghost.x >= COLS) ghost.x = 0.5;
+                } else {
+                    // Hit a wall, choose new direction
+                    const possibleDirs = [];
+                    for (let d = 0; d < 4; d++) {
+                        const testX = Math.round(ghost.x) + dx[d];
+                        const testY = Math.round(ghost.y) + dy[d];
+                        if (testX >= 0 && testX < COLS && testY >= 0 && testY < ROWS && maze[testY][testX] !== 1) {
+                            possibleDirs.push(d);
+                        }
+                    }
+                    if (possibleDirs.length > 0) {
+                        ghost.direction = possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+                    }
+                }
+                
+                // Check collision with Pac-Man
+                const dist = Math.sqrt(Math.pow(ghost.x - pacman.x, 2) + Math.pow(ghost.y - pacman.y, 2));
+                if (dist < 0.6) {
+                    loseLife();
+                }
+            });
+        }
+        
+        // Update score display
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('highScore').textContent = highScore;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('pacmanHighScore', highScore);
+            }
+        }
+        
+        // Update game status
+        function updateStatus(message) {
+            document.getElementById('gameStatus').textContent = message;
+        }
+        
+        // Start game
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                gameRunning = true;
+                gamePaused = false;
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('pauseBtn').disabled = false;
+                updateStatus('Game in progress - Good luck!');
+            }
+        }
+        
+        // Toggle pause
+        function togglePause() {
+            if (!gameStarted) return;
+            
+            gamePaused = !gamePaused;
+            gameRunning = !gamePaused;
+            
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (gamePaused) {
+                pauseBtn.textContent = 'Resume Game';
+                pauseBtn.className = 'btn btn-primary';
+                updateStatus('Game Paused - Press Resume to continue');
+            } else {
+                pauseBtn.textContent = 'Pause Game';
+                pauseBtn.className = 'btn btn-secondary';
+                updateStatus('Game in progress - Good luck!');
+            }
+        }
+        
+        // Lose a life
+        function loseLife() {
+            if (!gameRunning) return;
+            
+            lives--;
+            updateScore();
+            
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                gameRunning = false;
+                updateStatus(`Life lost! ${lives} lives remaining...`);
+                setTimeout(() => {
+                    resetPositions();
+                    gameRunning = true;
+                    updateStatus('Game in progress - Good luck!');
+                }, 2000);
+            }
+        }
+        
+        // Reset positions
+        function resetPositions() {
+            pacman.x = 14;
+            pacman.y = 23;
+            pacman.direction = 0;
+            pacman.nextDirection = 0;
+            
+            ghosts.forEach(ghost => {
+                ghost.x = ghost.startX;
+                ghost.y = ghost.startY;
+            });
+        }
+        
+        // Level complete
+        function levelComplete() {
+            gameRunning = false;
+            level++;
+            
+            const overlay = document.getElementById('gameOverlay');
+            const content = document.getElementById('gameOverContent');
+            const title = document.getElementById('gameOverTitle');
+            
+            content.className = 'game-over-content level-complete';
+            title.textContent = 'LEVEL COMPLETE!';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level - 1;
+            document.getElementById('highScoreMsg').textContent = `Next Level: ${level}`;
+            
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                content.className = 'game-over-content';
+                mazeState = maze.map(row => [...row]);
+                countDots();
+                resetPositions();
+                pacman.speed = Math.min(0.25, 0.15 + (level - 1) * 0.02);
+                gameRunning = true;
+                updateStatus(`Level ${level} - Speed increased!`);
+            }, 3000);
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            gameStarted = false;
+            
+            const overlay = document.getElementById('gameOverlay');
+            const title = document.getElementById('gameOverTitle');
+            const highScoreMsg = document.getElementById('highScoreMsg');
+            
+            title.textContent = 'GAME OVER';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = level;
+            
+            if (score >= highScore) {
+                highScoreMsg.textContent = '🎉 NEW HIGH SCORE! 🎉';
+                highScoreMsg.style.color = '#ffeb3b';
+            } else {
+                highScoreMsg.textContent = `High Score: ${highScore}`;
+                highScoreMsg.style.color = '#fff';
+            }
+            
+            overlay.style.display = 'flex';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            updateStatus('Game Over! Press START to play again');
+        }
+        
+        // Restart game
+        function restartGame() {
+            score = 0;
+            level = 1;
+            lives = 3;
+            gameRunning = false;
+            gameStarted = false;
+            gamePaused = false;
+            pacman.speed = 0.15;
+            mazeState = maze.map(row => [...row]);
+            countDots();
+            resetPositions();
+            
+            document.getElementById('gameOverlay').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('pauseBtn').textContent = 'Pause Game';
+            document.getElementById('pauseBtn').className = 'btn btn-secondary';
+            
+            updateScore();
+            updateStatus('Press START to begin!');
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameStarted) return;
+            
+            switch(e.key) {
+                case 'ArrowRight':
+                    pacman.nextDirection = 0;
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    pacman.nextDirection = 1;
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    pacman.nextDirection = 2;
+                    e.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    pacman.nextDirection = 3;
+                    e.preventDefault();
+                    break;
+                case ' ':
+                case 'p':
+                case 'P':
+                    togglePause();
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        // Game loop
+        function gameLoop() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawMaze();
+            drawPacman();
+            drawGhosts();
+            
+            if (gameRunning && !gamePaused) {
+                updatePacman();
+                updateGhosts();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize
+        updateScore();
+        updateStatus('Press START to begin!');
+        gameLoop();
+    </script>
+</body>
+</html>
